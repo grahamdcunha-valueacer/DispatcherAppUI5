@@ -1,0 +1,22 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns:gnt2="sap.gantt.simple"
+    core:require="{
+		formatMessage: 'sap/base/strings/formatMessage'
+	}"
+>
+    <gnt2:BaseRectangle
+        shapeId="{data>shapeId}"
+        time="{path:'data>StartTime', formatter:'.formatter.dateToObjectByZone'}"
+        endTime="{path:'data>EndTime', formatter:'.formatter.dateToObjectByZone'}"
+        height="{= ${data>Type} === 'REST' ? 14 : 8}"
+        rx="3"
+        ry="3"
+        fill="{= ${data>Type} === 'REST'?'#6D28D9':'#F59E0B'}"
+        title="{data>Title}"
+        showTitle="true"
+        selectable="false"
+        draggable="false"
+        resizable="false"
+    />
+</core:FragmentDefinition>

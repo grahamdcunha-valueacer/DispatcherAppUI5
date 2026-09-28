@@ -5,17 +5,7 @@ sap.ui.define([
     "use strict";
 
     return {
-
-        getAll() {
-            return ApiService.get(
-                "/GetDrivers"
-            );
-        },
-        GetDrv() {
-            return ApiService.get(
-                "/GetDrv"
-            );
-        },
+       
 
         GetDrv(oPayload) {
             const query = new URLSearchParams({

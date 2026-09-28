@@ -30,9 +30,11 @@ sap.ui.define(["../config/config"], function (config) {
                     body: JSON.stringify(payload)
                 }
             );
+
+            
             if (!response.ok) {
                 const error =  await response.json();
-                throw new Error( error.message ||  "Backend service error" );
+                throw new Error( error.message ||  `Post Failed - Backend service error  (${response.status}) ${response.statusText}` );
             }
 
             return response.json();
@@ -51,7 +53,7 @@ sap.ui.define(["../config/config"], function (config) {
             );
 
             if (!response.ok) {
-                throw new Error("Update failed");
+                throw new Error( error.message ||  `Updated Failed - Backend service error  (${response.status}) ${response.statusText}` );
             }
 
             return response.json();
@@ -66,7 +68,7 @@ sap.ui.define(["../config/config"], function (config) {
             );
 
             if (!response.ok) {
-                throw new Error("Delete failed");
+                throw new Error( error.message ||  `Delete Failed - Backend service error  (${response.status}) ${response.statusText}` );
             }
 
             return response.json();

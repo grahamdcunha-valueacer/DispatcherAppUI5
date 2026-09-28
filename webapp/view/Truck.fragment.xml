@@ -27,7 +27,9 @@
 				selectionMode="Single"
 				selectionBehavior="RowSelector"
 				enableColumnReordering="true"
-				fixedColumnCount = "1"				
+				fixedColumnCount = "1"
+				width="auto"
+				class="foGanttCard sapUiResponsiveContentPadding"				
 				rows="{
 					path: 'data>/Resources',
 					parameters: {
@@ -35,7 +37,7 @@
 					}
 				}">
 				<extension>
-					<m:OverflowToolbar class="truckToolbar">
+					<m:OverflowToolbar class="truckToolbar sapUiResponsiveContentPadding sapUiSmallMarginTop">
 						<m:Title text="Vehicle" level="H2" /> 
 						<m:ToolbarSpacer/>
 						<m:Button icon="sap-icon://expand-all" type="Transparent" press=".showUtilization"/>
@@ -65,7 +67,7 @@
 								path:'data>EndTime',
 								formatter:'.formatter.dateToObject'
 								}"
-								fill="#e3f0e8"
+								fill="#bccaaf"
 								height="22"							
 								countInBirdEye="true"
 								showTitle="true"
@@ -78,156 +80,7 @@
 											],
 											formatter: 'formatMessage'
 									}"
-								expandable="true" selectable="true" draggable="true" resizable="true"/>					
-
-							<!-- <gnt2:BaseRectangle
-								    visible="{= ${data>AvailabilityShapes/0} ? true : false }"
-									shapeId="{data>AvailabilityShapes/0/shapeId}"
-									time="{
-        								path: 'data>AvailabilityShapes/0/StartTime',
-        								formatter: '.formatter.dateToObject'}"
-									endTime="{
-        								path: 'data>AvailabilityShapes/0/EndTime',
-        								formatter: '.formatter.dateToObject'}"
-									 fill="#99D101"
-									countInBirdEye="true" height="25"
-									title = "{
-												parts:[
-													{ path:'' }
-																								
-												],
-												formatter: '.formatter.orderTitle'
-											}"
-									showTitle="true"
-									tooltip="{
-											parts: [
-												'i18n>VehicleTooltip',
-												'data>resourceId',
-												'data>AvailabilityShapes/0/StartTime',
-												'data>AvailabilityShapes/0/EndTime'
-											],
-											formatter: 'formatMessage'
-									}"
-									expandable="true" selectable="true" draggable="true" resizable="true"/>
-
-									<gnt2:BaseRectangle
-								    visible="{= ${data>AvailabilityShapes/1} ? true : false }"
-									shapeId="{data>AvailabilityShapes/1/shapeId}"
-									time="{
-        								path: 'data>AvailabilityShapes/1/StartTime',
-        								formatter: '.formatter.dateToObject'}"
-									endTime="{
-        								path: 'data>AvailabilityShapes/1/EndTime',
-        								formatter: '.formatter.dateToObject'}"
-									 fill="#99D101"
-									countInBirdEye="true" height="25"
-									title = "{
-												parts:[
-													{ path:'' }
-																										
-												],
-												formatter: '.formatter.orderTitle'
-											}"
-									showTitle="true"
-									tooltip="{
-											parts: [
-												'i18n>VehicleTooltip',
-												'data>AvailabilityShapes/1/resourceId',
-												'data>AvailabilityShapes/1/StartTime',
-												'data>AvailabilityShapes/1/EndTime'
-											],
-											formatter: 'formatMessage'
-									}"
-									expandable="true" selectable="true" draggable="true" resizable="true"/>
-
-									<gnt2:BaseRectangle
-								    visible="{= ${data>AvailabilityShapes/2} ? true : false }"
-									shapeId="{data>AvailabilityShapes/2/shapeId}"
-									time="{
-        								path: 'data>AvailabilityShapes/2/StartTime',
-        								formatter: '.formatter.dateToObject'}"
-									endTime="{
-        								path: 'data>AvailabilityShapes/2/EndTime',
-        								formatter: '.formatter.dateToObject'}"
-									 fill="#99D101"
-									countInBirdEye="true" height="25"
-									title = "{
-												parts:[
-													{ path:'' }												
-												],
-												formatter: '.formatter.orderTitle'
-											}"
-									showTitle="true"
-									tooltip="{
-											parts: [
-												'i18n>VehicleTooltip',
-												'data>AvailabilityShapes/2/resourceId',
-												'data>AvailabilityShapes/2/StartTime',
-												'data>AvailabilityShapes/2/EndTime'
-											],
-											formatter: 'formatMessage'
-									}"
-									expandable="true" selectable="true" draggable="true" resizable="true"/>
-
-									<gnt2:BaseRectangle
-								    visible="{= ${data>AvailabilityShapes/3} ? true : false }"
-									shapeId="{data>AvailabilityShapes/3/shapeId}"
-									time="{
-        								path: 'data>AvailabilityShapes/3/StartTime',
-        								formatter: '.formatter.dateToObject'}"
-									endTime="{
-        								path: 'data>AvailabilityShapes/3/EndTime',
-        								formatter: '.formatter.dateToObject'}"
-									 fill="#99D101"
-									countInBirdEye="true" height="25"
-									title = "{
-												parts:[
-													{ path:'' }
-																								
-												],
-												formatter: '.formatter.orderTitle'
-											}"
-									showTitle="true"
-									tooltip="{
-											parts: [
-												'i18n>VehicleTooltip',
-												'data>AvailabilityShapes/3/resourceId',
-												'data>AvailabilityShapes/3/StartTime',
-												'data>AvailabilityShapes/3/EndTime'
-											],
-											formatter: 'formatMessage'
-									}"
-									expandable="true" selectable="true" draggable="true" resizable="true"/>
-
-									<gnt2:BaseRectangle
-								    visible="{= ${data>AvailabilityShapes/4} ? true : false }"
-									shapeId="{data>AvailabilityShapes/4/shapeId}"
-									time="{
-        								path: 'data>AvailabilityShapes/4/StartTime',
-        								formatter: '.formatter.dateToObject'}"
-									endTime="{
-        								path: 'data>AvailabilityShapes/4/EndTime',
-        								formatter: '.formatter.dateToObject'}"
-									 fill="#99D101"
-									countInBirdEye="true" height="25"
-									title = "{
-												parts:[
-													{ path:'' }
-												],
-												formatter: '.formatter.orderTitle'
-											}"
-									showTitle="true"
-									tooltip="{
-											parts: [
-												'i18n>VehicleTooltip',
-												'data>AvailabilityShapes/4/resourceId',
-												'data>AvailabilityShapes/4/StartTime',
-												'data>AvailabilityShapes/4/EndTime'
-											],
-											formatter: 'formatMessage'
-									}"
-									expandable="true" selectable="true" draggable="true" resizable="true"/> -->
-
+								expandable="true" selectable="true" draggable="true" resizable="true"/>		
 									
 						</gnt2:shapes1>
 						<!-- Assigned Freight Orders -->

@@ -9,14 +9,14 @@
 	<axistime:ProportionZoomStrategy>
 		<axistime:totalHorizon>
 			<config:TimeHorizon 
-				startTime="20260923000000" 
-				endTime="20261002235900"/>
+				startTime="{horizon>/horizonStart}" 
+				endTime="{horizon>/horizonEnd}"/>
 		</axistime:totalHorizon>
 		
 		<axistime:visibleHorizon>
 			<config:TimeHorizon 
-				startTime="20260924000000" 
-				endTime="20260930235900"/>
+				startTime="{horizon>/horizonStart}" 
+				endTime="{horizon>/horizonEnd}"/>
 		</axistime:visibleHorizon>
 	</axistime:ProportionZoomStrategy>
 

@@ -123,7 +123,7 @@ sap.ui.define(["sap/ui/model/type/Currency"], function (Currency) {
 
             // Handle standard ISO format:
             // 2026-09-08T07:16:35Z
-            var oDate = new Date(sDate);           
+            var oDate = new Date(sDate);
 
 
             if (!isNaN(oDate.getTime())) {
@@ -157,8 +157,8 @@ sap.ui.define(["sap/ui/model/type/Currency"], function (Currency) {
                 })
                 .format(sDate);
 
-            sap.m.MessageToast.show("sUTC" +  sUTC);
-            sap.m.MessageToast.show("sIST" +  sIST);
+            sap.m.MessageToast.show("sUTC" + sUTC);
+            sap.m.MessageToast.show("sIST" + sIST);
 
             var oMatch;
 
@@ -201,6 +201,46 @@ sap.ui.define(["sap/ui/model/type/Currency"], function (Currency) {
 
 
         },
+        dateToObjectByZone: function (sDateTime) {
+
+            if (!sDateTime) {
+                return null;
+            }
+
+            var sSettings = localStorage.getItem(
+                "DispatcherZoneSettings"
+            );
+
+            var sZone = "UTC";
+
+            if (sSettings) {
+                sZone = JSON.parse(sSettings).zone;
+            }
+
+            var oDate = new Date(sDateTime);
+
+            switch (sZone) {
+
+                case "IST":
+                    oDate = new Date(
+                        oDate.getTime() + (5.5 * 60 * 60 * 1000)
+                    );
+                    break;
+
+                case "EST":
+                    oDate = new Date(
+                        oDate.getTime() - (5 * 60 * 60 * 1000)
+                    );
+                    break;
+
+                case "UTC":
+                default:
+                    break;
+            }
+
+            return oDate;
+        },
+
         formatDate: function (oDate) {
 
             return oDate.getFullYear() +
@@ -215,6 +255,23 @@ sap.ui.define(["sap/ui/model/type/Currency"], function (Currency) {
 
                 String(oDate.getSeconds()).padStart(2, "0");
 
+        },
+        getFOColor: function (sVehId, sDriverId) {
+
+            sVehId = (sVehId || "").trim();
+            sDriverId = (sDriverId || "").trim();
+
+            if (sVehId && sDriverId) {
+                return "#22C55E"; // Fully assigned
+            }
+            else if (sVehId) {
+                return "#dba7a7"; // Vehicle assigned
+            }
+            else if (sDriverId) {
+                return "#7cd8e4"; // Driver assigned
+            }
+
+            return "#cccccc"; // Unassigned
         }
     };
 });

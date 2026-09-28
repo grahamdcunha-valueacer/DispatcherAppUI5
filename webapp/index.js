@@ -4,6 +4,7 @@ sap.ui.require([
 	"sap/m/Page",
 	"sap/ui/core/ComponentContainer",
 	"sap/ui/core/Core"
+	
 ], function (
 	Shell, App, Page, ComponentContainer, Core) {
 	"use strict";

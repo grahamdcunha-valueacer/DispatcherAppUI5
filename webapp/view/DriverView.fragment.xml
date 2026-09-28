@@ -26,6 +26,8 @@
 				selectionBehavior="RowSelector"
 				enableColumnReordering="true"
 				fixedColumnCount = "1"
+				width="auto"
+				class="foGanttCard sapUiResponsiveContentPadding"
 				rows="{
 					path: 'data>/Drivers',
 					parameters: {
@@ -34,7 +36,7 @@
 					}
 				}">
 				<extension>
-					<m:OverflowToolbar class="driverToolbar">
+					<m:OverflowToolbar class="driverToolbar sapUiResponsiveContentPadding sapUiSmallMarginTop">
 						<m:Title text="Drivers" level="H2"/> 
 						<m:ToolbarSpacer/>
 						<m:Button icon="sap-icon://expand-all" type="Transparent" press=".showUtilization"/>

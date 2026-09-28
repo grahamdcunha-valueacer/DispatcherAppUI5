@@ -1,11 +1,14 @@
 sap.ui.define([
 	"sap/ui/core/mvc/Controller",
-	"sap/ui/model/json/JSONModel",	
+	"sap/ui/model/json/JSONModel",
 	"../model/formatter",
 	"sap/gantt/misc/Utility",
 	"sap/ui/core/Fragment",
 	"../service/FreightOrderService",
-], function (Controller, JSONModel,  formatter, Utility, Fragment, FreightOrderService) {
+	"sap/m/p13n/Engine",
+	"sap/m/p13n/SelectionController",
+	"sap/m/p13n/MetadataHelper"
+], function (Controller, JSONModel, formatter, Utility, Fragment, FreightOrderService, Engine, SelectionController, MetadataHelper) {
 	"use strict";
 
 
@@ -15,17 +18,17 @@ sap.ui.define([
 
 		onInit: function () {
 
-			var oDataModel = this.getOwnerComponent().getModel("data");
-
 			var m = this.getOwnerComponent().getModel("data");
 			if (!m) return;
 
+			this._initP13n();
+
 			var oToday = new Date();
-			var oFirstDay = new Date(
-				oToday.getFullYear(),
-				oToday.getMonth(),
-				1
-			);
+			// var oFirstDay = new Date(
+			// 	oToday.getFullYear(),
+			// 	oToday.getMonth(),
+			// 	1
+			// );
 
 			var oFromDate = new Date(oToday);
 			oFromDate.setDate(oFromDate.getDate() - 7);
@@ -33,8 +36,7 @@ sap.ui.define([
 			var oToDate = new Date(oToday);
 			oToDate.setDate(oToDate.getDate() + 7);
 
-			this.byId("dpFromDate").setDateValue(oFromDate);
-			this.byId("dpToDate").setDateValue(oToDate);
+			
 
 			var sSettings =
 				localStorage.getItem("DispatcherZoneSettings");
@@ -50,38 +52,10 @@ sap.ui.define([
 			// aDeferredGroups = aDeferredGroups.concat(["deferred"]);
 			// oDataModel.setDeferredGroups(aDeferredGroups);
 
-
-
-
-			// // First day of current month
-			// var oStart = new Date(
-			// 	oToday.getFullYear(),
-			// 	oToday.getMonth(),
-			// 	1
-			// );
-
-			// // Last day of current month
-			// var oEnd = new Date(
-			// 	oToday.getFullYear(),
-			// 	oToday.getMonth() + 1,
-			// 	0
-			// );
-
-			// var formatGanttDate = function (oDate) {
-			// 	return oDate.getFullYear() +
-			// 		String(oDate.getMonth()).padStart(2, "0") +
-			// 		String(oDate.getDate()).padStart(2, "0") +
-			// 		"000000";
-			// };
-
-			// var oViewModel = new sap.ui.model.json.JSONModel({
-			// 	horizonStart: formatGanttDate(oStart),
-			// 	horizonEnd: formatGanttDate(oEnd)
-			// });
-
-			// this.getView().setModel(oViewModel, "horizon");
-
+			this._updateHorizon(oFromDate,oToDate);			
+			this.onLoadData();
 			this.iNewFOCount = 0;
+			/********************************************************************************************* */
 			var oGantt1 = this.getView().byId("FreightOrder");
 
 			var oFullScreenButton1 = new sap.m.Button({
@@ -101,7 +75,7 @@ sap.ui.define([
 					//oGantt1.setShowBirdEye(true);
 				}
 			});
-			this.onLoadData();
+			
 			/********************************************************************************************* */
 			var oGantt2 = this.getView().byId("Truck");
 			var oFullScreenButton2 = new sap.m.Button({
@@ -119,25 +93,24 @@ sap.ui.define([
 					}
 				}
 			});
-
-			//this.getView().getModel("data").setProperty("/aShapes", aShapes);
+			
 			/********************************************************************************************* */
-			// var oGantt3 = this.getView().byId("Driver");
-			// var oFullScreenButton3 = new sap.m.Button({
-			// 	icon: "sap-icon://full-screen",
-			// 	type: "Transparent",
-			// 	press: function () {
-			// 		this.onToggleFullScreen(oGantt3, true, oFullScreenButton3);
-			// 	}.bind(this)
-			// });
-			// oGantt3.addEventDelegate({
-			// 	onAfterRendering: function () {
-			// 		var oGanttOverflowToolbar = oGantt3.getChartOverflowToolbar();
-			// 		if (oGanttOverflowToolbar) {
-			// 			oGanttOverflowToolbar.addContent(oFullScreenButton3);
-			// 		}
-			// 	}
-			// });
+			var oGantt3 = this.getView().byId("Driver");
+			var oFullScreenButton3 = new sap.m.Button({
+				icon: "sap-icon://full-screen",
+				type: "Transparent",
+				press: function () {
+					this.onToggleFullScreen(oGantt3, true, oFullScreenButton3);
+				}.bind(this)
+			});
+			oGantt3.addEventDelegate({
+				onAfterRendering: function () {
+					var oGanttOverflowToolbar = oGantt3.getChartOverflowToolbar();
+					if (oGanttOverflowToolbar) {
+						oGanttOverflowToolbar.addContent(oFullScreenButton3);
+					}
+				}
+			});
 		},
 		/********************************************************************************************** */
 		onToggleFullScreen: function (oGantt, bShowToolbar, oButton) {
@@ -161,15 +134,42 @@ sap.ui.define([
 				sap.m.MessageToast.show("Please select From Date and To Date");
 				return;
 			}
+			this._updateHorizon(oFromDate,oToDate);
 
 			await this.getOwnerComponent().loadMasterData(
 				oFromDate,
 				oToDate,
 				oDc
-			);
+			);			
 		},
 		onFilter: function () {
 			this.applyFilters();
+
+		},
+
+		_updateHorizon: function (oFromDate,oToDate) {	
+			
+			this.byId("dpFromDate").setDateValue(oFromDate);
+			this.byId("dpToDate").setDateValue(oToDate);
+			var sStart =
+				oFromDate.getFullYear() +
+				String(oFromDate.getMonth() + 1).padStart(2, "0") +
+				String(oFromDate.getDate()).padStart(2, "0") +
+				"000000";
+
+			var sEnd =
+				oToDate.getFullYear() +
+				String(oToDate.getMonth() + 1).padStart(2, "0") +
+				String(oToDate.getDate()).padStart(2, "0") +
+				"235959";
+
+			
+			var oViewModel = new sap.ui.model.json.JSONModel({
+				horizonStart: sStart,
+				horizonEnd: sEnd
+			});
+
+			this.getView().setModel(oViewModel, "horizon");
 
 		},
 
@@ -190,12 +190,11 @@ sap.ui.define([
 			try {
 
 
+				this.byId("btnSave").setEnabled(true);
 				var oSourceGantt = oEvent.getSource();
 				//var oNewDateTime = oEvent.getParameter("newDateTime");
 				var oDraggedShapeDates = oEvent.getParameter("draggedShapeDates");
 				var sLastDraggedShapeUid = oEvent.getParameter("lastDraggedShapeUid");
-
-
 				var oParsedUid = Utility.parseUid(sLastDraggedShapeUid).shapeId;
 				oParsedUid = oParsedUid.replace(/-/g, "").toUpperCase();
 				var oNewDateTime_s = oEvent.getParameter("newDateTime");
@@ -225,7 +224,6 @@ sap.ui.define([
 				if (oSimulation[0].updateRc != 'F') {
 
 					// console.log("Simulation Results", aResults);
-
 					// const sNewDepartureStart = response?.value?.[0]?.simulationResults?.[0]?.newDepartureStart;
 					// const sNewDepartureEnd = response?.value?.[0]?.simulationResults?.[0]?.newDepartureEnd;
 					// const aRestBreaks = response?.value?.[0]?.simulationResults?.[0]?.restBreaks || [];
@@ -240,6 +238,16 @@ sap.ui.define([
 					// console.log(newDepartureEnd);
 					// console.log(restBreaks);
 
+					var aRestBreakShapes = restBreaks.map(function (oBreak) {
+						return {
+							Type: oBreak.restType,
+							StartTime: oBreak.rest_startTime,
+							EndTime: oBreak.rest_endTime
+						};
+					});
+
+					oDataModel.setProperty("/CurrentRestBreaks", aRestBreakShapes);
+					oDataModel.refresh(true);
 
 					// Convert API datetime string to JS Date
 					const oNewDateTime = formatter.dateToNewObject(newDepartureStart);
@@ -277,21 +285,17 @@ sap.ui.define([
 						var oNewEndDateTime = new Date(formatter.dateToNewObject(newDepartureEnd).getTime() + iMoveWidthInMs);
 
 						var oData = oDataModel.getObject(sPath);
+						//var sType = oDataModel.getProperty(sPath + "/Type");
 
-						var sType = oDataModel.getProperty(sPath + "/Type");
-
-						if (sTargetObjectType == "09") {
-							if (sType == "FO") {
-								that.handleMoveFreightOrderToTruck(oNewDateTime.toISOString().replace(".000", ""), oNewEndDateTime.toISOString().replace(".000", ""), oTargetObject, sPath, oDataModel, iMoveWidthInMs);
-							} else if (sType == "FU") {
-								if (oData.PlanStatus == "unplanned") {
-									that.handleMoveFreightUnitToTruck(oNewDateTime.toISOString().replace(".000", ""), oNewEndDateTime.toISOString().replace(".000", ""), oTargetObject, sPath, oDataModel);
-								}
-							}
+						if (sTargetObjectType == "Truck") {
 							that.handleMoveFreightOrderToTruck(oNewDateTime.toISOString().replace(".000", ""), oNewEndDateTime.toISOString().replace(".000", ""), oTargetObject, sPath, oDataModel, iMoveWidthInMs);
+						}
+						else {
+							that.applySimulationResultToFreightOrder(oNewDateTime.toISOString().replace(".000", ""), oNewEndDateTime.toISOString().replace(".000", ""), oTargetObject, sPath, oDataModel);
 						}
 					});
 					sap.m.MessageToast.show(`Freight Order updated successfully. Start: ${oNewDateTime}, End: ${oNewEndDateTime}`);
+					this.byId("UseAI").setEnabled(false);
 				}
 
 			} catch (e) {
@@ -348,6 +352,80 @@ sap.ui.define([
 		},
 
 		handleMoveFreightOrderToTruck: function (oTime, oEndTime, oTargetObject, sPath, oModel, iMoveWidthInMs) {
+			var oData = oModel.getObject(sPath);
+			var sCurrentResourceID = oData.ResourceID;
+			var sTargetResourceID = oTargetObject.ResourceID;
+
+			if (sCurrentResourceID !== sTargetResourceID) {
+				oData.StartTime = oTime;
+				oData.EndTime = oEndTime;
+				oData.ResourceID = sTargetResourceID;
+				oData.ParentResourceID = sTargetResourceID;
+
+				var mParameters = {
+					success: function (oData) {
+						oModel.read("/Resources('" + sTargetResourceID + "')", {
+							urlParameters: {
+								"$expand": "ResourceToRequirements"
+							}
+						});
+					},
+					refreshAfterChange: false
+				};
+				oModel.update(sPath, oData, mParameters);
+			} else {
+				oModel.setProperty(sPath + "/StartTime", oTime, true);
+				oModel.setProperty(sPath + "/EndTime", oEndTime, true);
+			}
+
+			oModel.read('/Requirements', {
+				success: function (oData) {
+					var aResult = oData.results;
+					aResult.forEach(function (oNode) {
+						var sUnitPath = "/Requirements('" + oNode.RequirementID + "')";
+						oModel.setProperty(sUnitPath + "/StartTime", oTime, true);
+						oModel.setProperty(sUnitPath + "/EndTime", oEndTime, true);
+					});
+
+				},
+				error: function () {
+
+				},
+				urlParameters: {
+					"$filter": "ParentRequirementID eq " + oData.RequirementID
+				}
+			});
+
+
+			oModel.read('/UtilizationItems', {
+				success: function (oItemData) {
+					var aResult = oItemData.results;
+					aResult.forEach(function (oItem) {
+						var sUnitPath = "/UtilizationItems('" + oItem.UtilItemID + "')";
+						var oOldStartDateTime = oItem.StartTime;
+						var oOldEndDateTime = oItem.EndTime;
+						var oNewStartTime = new Date(oOldStartDateTime.getTime() + iMoveWidthInMs);
+						var oNewEndTime = new Date(oOldEndDateTime.getTime() + iMoveWidthInMs);
+						var oData = {
+							StartTime: oNewStartTime,
+							EndTime: oNewEndTime
+						};
+
+						oModel.update(sUnitPath, oData);
+					});
+
+				},
+				error: function () {
+
+				},
+				urlParameters: {
+					"$filter": "RootRequirementID eq " + oData.RequirementID
+				}
+			});
+
+		},
+
+		applySimulationResultToFreightOrder: function (oTime, oEndTime, oTargetObject, sPath, oModel) {
 
 			var oData = oModel.getObject(sPath);
 			var sCurrentResourceID = oData.id;
@@ -356,9 +434,9 @@ sap.ui.define([
 			if (sCurrentResourceID !== sTargetResourceID) {
 				oData.StartTime = oTime;
 				oData.EndTime = oEndTime;
-				oData.PlanStatus = "planned";
+				//oData.PlanStatus = "planned";
 				oData.ResourceID = sTargetResourceID;
-				oData.ParentResourceID = sTargetResourceID;
+				//oData.ParentResourceID = sTargetResourceID;
 
 				var mParameters = {
 					success: function (oData) {
@@ -392,9 +470,6 @@ sap.ui.define([
 					oModel.setProperty(sPath + "/Arrival_Time", oEndTime);
 				});
 
-
-
-
 			if (!this.aChangedFOs) {
 				this.aChangedFOs = [];
 			}
@@ -412,52 +487,6 @@ sap.ui.define([
 				IvDriverId: "",
 				IvVehicleResId: ""
 			});
-
-
-			// oModel.read('/Requirements', {
-			// 	success: function (oData) {
-			// 		var aResult = oData.results;
-			// 		aResult.forEach(function (oNode) {
-			// 			var sUnitPath = "/Requirements('" + oNode.id + "')";
-			// 			oModel.setProperty(sUnitPath + "/Departure_Time", oTime, true);
-			// 			oModel.setProperty(sUnitPath + "/Arrival_Time", oEndTime, true);
-			// 		});
-
-			// 	},
-			// 	error: function () {
-
-			// 	},
-			// 	urlParameters: {
-			// 		"$filter": "ParentRequirementID eq " + oData.id
-			// 	}
-			// });
-
-
-			// oModel.read('/UtilizationItems', {
-			// 	success: function (oItemData) {
-			// 		var aResult = oItemData.results;
-			// 		aResult.forEach(function (oItem) {
-			// 			var sUnitPath = "/UtilizationItems('" + oItem.UtilItemID + "')";
-			// 			var oOldStartDateTime = oItem.StartTime;
-			// 			var oOldEndDateTime = oItem.EndTime;
-			// 			var oNewStartTime = new Date(oOldStartDateTime.getTime() + iMoveWidthInMs);
-			// 			var oNewEndTime = new Date(oOldEndDateTime.getTime() + iMoveWidthInMs);
-			// 			var oData = {
-			// 				StartTime: oNewStartTime,
-			// 				EndTime: oNewEndTime
-			// 			};
-
-			// 			oModel.update(sUnitPath, oData);
-			// 		});
-
-			// 	},
-			// 	error: function () {
-
-			// 	},
-			// 	urlParameters: {
-			// 		"$filter": "RootRequirementID eq " + oData.RequirementID
-			// 	}
-			// });
 
 		},
 
@@ -758,9 +787,6 @@ sap.ui.define([
 				};
 
 				await FreightOrderService.SaveFO(payload);
-
-
-
 				this.aChangedFOs = [];
 
 				await this.getOwnerComponent().loadMasterData();
@@ -988,6 +1014,12 @@ sap.ui.define([
 					contentWidth: "450px",
 					draggable: true,
 					resizable: true,
+					ShowAvailability: true,
+					ShowFOs: true,
+					ShowDrivers: true,
+					ShowRestBreaks: true,
+					ShowBirdEye: true,
+					TimeZone: "CET",
 
 					content: [
 						new sap.m.VBox({
@@ -1089,6 +1121,62 @@ sap.ui.define([
 			// Update timezone formatting
 			// Toggle Bird Eye View
 		},
+
+		_initP13n: function () {
+
+			var oTable = this.byId("FreightOrder").getTable();
+
+			this._oMetadataHelper = new MetadataHelper([
+				{
+					key: "id",
+					label: "Freight Order"
+				},
+				{
+					key: "Veh_id",
+					label: "Vehicle"
+				},
+				{
+					key: "driver_id",
+					label: "Driver"
+				},
+				{
+					key: "Departure_Time",
+					label: "Departure"
+				},
+				{
+					key: "Arrival_Time",
+					label: "Arrival"
+				}
+			]);
+
+			Engine.getInstance().register(
+				oTable,
+				{
+					helper: this._oMetadataHelper,
+					controller: {
+						Columns: new SelectionController({
+							targetAggregation: "columns",
+							control: oTable
+						})
+					}
+				}
+			);
+
+		},
+		onOpenP13n: function () {
+
+			var oTable = this.byId("FreightOrder").getTable();
+
+			Engine.getInstance().show(
+				oTable,
+				["Columns"],
+				{
+					title: "Personalization",
+					source: this.byId("btnP13n")
+				}
+			);
+
+		}
 
 
 	});

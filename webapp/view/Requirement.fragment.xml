@@ -1,29 +1,43 @@
-<core:FragmentDefinition 
-	xmlns="sap.ui.table"
-	xmlns:m="sap.m"
-	xmlns:core="sap.ui.core"
-	xmlns:axistime="sap.gantt.axistime"
-	xmlns:config="sap.gantt.config"
-	xmlns:gnt2="sap.gantt.simple"
-	xmlns:gnt-cal="sap.gantt.def.cal"
-	xmlns:demokit="dispatcherns.dispatcherproj"
-	xmlns:rm="sap.ui.table.rowmodes"
-	core:require="{
+<core:FragmentDefinition
+    xmlns:statusindicator="sap.suite.ui.commons.statusindicator"
+    xmlns="sap.ui.table"
+    xmlns:m="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:axistime="sap.gantt.axistime"
+    xmlns:config="sap.gantt.config"
+    xmlns:gnt2="sap.gantt.simple"
+    xmlns:gnt-cal="sap.gantt.def.cal"
+    xmlns:demokit="dispatcherns.dispatcherproj"
+    xmlns:rm="sap.ui.table.rowmodes"
+    core:require="{
 		formatMessage: 'sap/base/strings/formatMessage'
 	}"
-	>
-	<gnt2:BaseRectangle 
-		shapeId="{data>transportationOrderUUID}" countInBirdEye="true"
-		time="{
-        path: 'data>Departure_Time',
-        formatter: '.formatter.dateToObject'}"
-    	endTime="{
-        path: 'data>Arrival_Time',
-        formatter: '.formatter.dateToObject'}"	
-		height="22" rx ="6" ry="6"			
-		resizable="false" selectable="true" draggable= "true" 
-		title="{data>id}" showTitle="true" titleColor="black" fill="#99D101"
-		tooltip="{
+>
+    <gnt2:BaseRectangle
+        shapeId="{data>transportationOrderUUID}"
+        countInBirdEye="true"
+        time="{
+                 path: 'data>Departure_Time',
+                 formatter: '.formatter.dateToObjectByZone'}"
+        endTime="{
+                   path: 'data>Arrival_Time',
+                formatter: '.formatter.dateToObjectByZone'}"
+        height="22"
+        rx="6"
+        ry="6"
+        resizable="false"
+        selectable="true"
+        draggable="true"
+        title="{data>id}"
+        showTitle="true"
+        titleColor="black"
+        fill="{	parts: [
+					{ path: 'data>Veh_id' },
+					{ path: 'data>driver_id' }
+				],
+					formatter: '.formatter.getFOColor'
+			}"
+        tooltip="{
 			parts: [
 				'i18n>freightOrderTooltip',
 				'data>id',
@@ -31,10 +45,8 @@
 				'data>Departure_Time',
 				'data>Arrival_Time'
 			],
-			formatter: 'formatMessage'
-	}"
+			formatter: 'formatMessage'}"
+    />
 
-		/>
-
-	
+    
 </core:FragmentDefinition>

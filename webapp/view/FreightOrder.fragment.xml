@@ -1,72 +1,131 @@
 <core:FragmentDefinition
-	xmlns="sap.ui.table"
-	xmlns:m="sap.m"
-	xmlns:core="sap.ui.core"
-	xmlns:axistime="sap.gantt.axistime"
-	xmlns:config="sap.gantt.config"
-	xmlns:gnt2="sap.gantt.simple"
-	xmlns:rm="sap.ui.table.rowmodes">
-	<gnt2:GanttChartWithTable id="FreightOrder" ghostAlignment="Start" adhocLineLayer="Bottom"
-			shapeSelectionMode = "MultiWithKeyboard"
-			enableChartOverflowToolbar="true"
-			shapeSelectionSettings="{color:'sapNegativeElementColor', strokeDasharray:'1,0'}"
-			shapeDrop=".onShapeDrop"
-			shapeDoubleClick=".onShapeDoubleClick"
-			class="foGanttCard"
-			>
-		<gnt2:table>
-			<Table
-				selectionMode="Single"
-				selectionBehavior="RowSelector"
-				enableColumnReordering="true"
-				fixedColumnCount = "1"
-				rows="{
+    xmlns="sap.ui.table"
+    xmlns:m="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:axistime="sap.gantt.axistime"
+    xmlns:config="sap.gantt.config"
+    xmlns:gnt2="sap.gantt.simple"
+    xmlns:rm="sap.ui.table.rowmodes"
+>
+    <gnt2:GanttChartWithTable
+        id="FreightOrder"
+        ghostAlignment="Start"
+        adhocLineLayer="Bottom"
+        shapeSelectionMode="MultiWithKeyboard"
+        enableChartOverflowToolbar="true"
+        shapeSelectionSettings="{color:'sapNegativeElementColor', strokeDasharray:'1,0'}"
+        shapeDrop=".onShapeDrop"
+        shapeDoubleClick=".onShapeDoubleClick"
+        class="foGanttCard sapUiResponsiveContentPadding"
+    >
+        <gnt2:table>
+            <Table
+                selectionMode="Single"
+                selectionBehavior="RowSelector"
+                enableColumnReordering="true"
+                fixedColumnCount="1"
+				width="auto"
+                rows="{
 					path: 'data>/Requirements',					
 					parameters: {
 						operationMode: 'Server'
 					}
-				}">
-				<extension>
-					<m:OverflowToolbar class="foToolbar">
-						<m:Title text="Freight Order" level="H2"/> 
-						<m:ToolbarSpacer/>
-						
-						<m:Button icon="sap-icon://expand-all" type="Transparent" press=".showUtilization"/>
-						<m:Button icon="sap-icon://collapse-all" type="Transparent" press=".hideUtilization"/>
-						<m:Button icon="sap-icon://refresh"/>	
-						<!-- <m:Select forceSelection="false" selectedKey="FO" change=".onHierarchyChange">
+				}"
+            >
+                <extension>
+                    <m:OverflowToolbar class="foToolbar sapUiResponsiveContentPadding sapUiSmallMarginTop">
+                        <m:Title
+                            text="Freight Order"
+                            level="H2"
+                        />
+
+                        <m:ToolbarSpacer />
+
+                        <m:Button
+                            icon="sap-icon://expand-all"
+                            type="Transparent"
+                            press=".showUtilization"
+                        />
+                        <m:Button
+                            icon="sap-icon://collapse-all"
+                            type="Transparent"
+                            press=".hideUtilization"
+                        />
+                        <m:Button icon="sap-icon://refresh" />
+                        <!-- <m:Select forceSelection="false" selectedKey="FO" change=".onHierarchyChange">
 							<m:items>
 								<core:ListItem key="FOFU" text="Freight Order and Freight Unit"/> 
 								<core:ListItem key="FO" text="Freight Order"/>
 								 <core:ListItem key="FU" text="Freight Unit"/> 
 							</m:items>
 						</m:Select> -->
-						<!-- <m:Button text="Create" type="Transparent" press=".onCreate"/>	
+                        <!-- <m:Button text="Create" type="Transparent" press=".onCreate"/>	
 						<m:Button text="Delete" type="Transparent" press=".onDelete"/> -->
-					</m:OverflowToolbar>
-				</extension>
-				<rowMode>
-					<rm:Auto minRowCount="5"/>
-				</rowMode>
-				<rowSettingsTemplate>
-					<gnt2:GanttRowSettings rowId="{data>id}">
-						<gnt2:shapes1>
-							<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.Requirement" type="XML" />
-						</gnt2:shapes1>
-						<gnt2:calendars>
-							<gnt2:BaseCalendar shapeId="{data>id}" calendarName="{data>id}" fill="#ffffff"/>  
-							<!-- <gnt2:BaseCalendar  shapeId="data>id" calendarName="Weekend" fill="#b9d3e4"/> -->
-						</gnt2:calendars>
-					</gnt2:GanttRowSettings>
-				</rowSettingsTemplate>
-				<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.SharedTableColumn" type="XML"/>
-			</Table>
-			
-		</gnt2:table>
-
-		<gnt2:axisTimeStrategy>
-			<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.AxisTimeStrategy" type="XML"/> 
-		</gnt2:axisTimeStrategy>		
-	</gnt2:GanttChartWithTable>
-
+                    </m:OverflowToolbar>
+                </extension>
+                <!-- Responsive row mode -->
+                <rowMode>
+                    <rm:Auto minRowCount="5" />
+                </rowMode>
+                <!-- Gantt row configuration -->
+                <rowSettingsTemplate>
+                    <gnt2:GanttRowSettings rowId="{data>id}">
+                    <!-- Freight Order shape -->
+                        <gnt2:shapes1>
+                            <core:Fragment
+                                fragmentName="dispatcherns.dispatcherproj.view.Requirement"
+                                type="XML"
+                            />
+                        </gnt2:shapes1>
+                        <!-- Rest/Break shape -->
+                        <!--    This renders one rest-break shape only when the fields
+                        are available directly in the current Requirement object. Expected properties:
+                        restType,rest_startTime and rest_endTime
+                        -->
+                        <gnt2:shapes2>
+                            <core:Fragment
+                                fragmentName="dispatcherns.dispatcherproj.view.RestBreak"
+                                type="XML"
+                            />
+                        </gnt2:shapes2>
+                        <!-- Assigned Driver icon: current Requirement row context -->
+                        <gnt2:shapes3>
+                            <gnt2:BaseImage
+                                visible="{= ${data>driver_id} ? (${data>driver_id} ? true : false) : false }"
+                                src="sap-icon://accept"
+                                time="{
+									    path: 'data>Departure_Time',
+										formatter: '.formatter.dateToObjectByZone'}"                                
+                                width="20"
+                                height="{= ${data>restType} === 'REST' ? 14 : 8 }"
+                                xBias="4"
+                                fill="black"
+                                yBias="4"
+                            />
+                        </gnt2:shapes3>
+                        <gnt2:calendars>
+                            <gnt2:BaseCalendar
+                                shapeId="{data>id}"
+                                calendarName="{data>id}"
+                                fill="#ffffff"
+                            />
+                            <!-- <gnt2:BaseCalendar  shapeId="data>id" calendarName="Weekend" fill="#b9d3e4"/> -->
+                        </gnt2:calendars>
+                    </gnt2:GanttRowSettings>
+                </rowSettingsTemplate>
+                <!-- Shared table columns -->
+                <core:Fragment
+                    fragmentName="dispatcherns.dispatcherproj.view.SharedTableColumn"
+                    type="XML"
+                />
+            </Table>
+        </gnt2:table>
+        <!-- Dynamic timeline strategy -->
+        <gnt2:axisTimeStrategy>
+            <core:Fragment
+                fragmentName="dispatcherns.dispatcherproj.view.AxisTimeStrategy"
+                type="XML"
+            />
+        </gnt2:axisTimeStrategy>
+    </gnt2:GanttChartWithTable>
 </core:FragmentDefinition>
