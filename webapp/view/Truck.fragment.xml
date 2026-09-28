@@ -21,8 +21,7 @@
 			shapeDoubleClick=".onShapeDoubleClick"
 			class="truckGanttCard">
 			
-		<gnt2:table >
-		
+		<gnt2:table >		
 			<Table
 				selectionMode="Single"
 				selectionBehavior="RowSelector"
@@ -120,21 +119,7 @@
 								
 								expandable="false" selectable="false" draggable="false" resizable="false"/>	
 						</gnt2:shapes2>
-
-						<!-- <gnt2:shapes2>
-							<demokit:UtilizationGroup shapeId="{data>UtilizationID}" expandable="true">
-								<demokit:utilizationLine>
-									<gnt2:UtilizationLineChart showMiddleLine="true" time="{data>StartTime}" endTime="{data>EndTime}"
-										shapeId="{data>resourceId}" scheme="truck_to_ulc"
-										dimensions="{path: 'data>OrderToUtilization',templateShareable: true}">
-										<gnt2:UtilizationDimension name="{data>UtilizationName}" dimensionColor="{data>Color}"
-											periods="{path:'data>UtilizationToItems',templateShareable: true}">
-											<gnt2:UtilizationPeriod from="{data>StartTime}" to="{data>EndTime}" value="{data>Value}"/>
-										</gnt2:UtilizationDimension>
-									</gnt2:UtilizationLineChart>
-								</demokit:utilizationLine>
-							</demokit:UtilizationGroup>
-						</gnt2:shapes2>  -->
+						
 					</gnt2:GanttRowSettings>
 				</rowSettingsTemplate>
 				<columns>

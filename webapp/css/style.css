@@ -312,7 +312,7 @@
 }
 
 .customGanttToolbar {
-    background-color: #4b8ac9;
+    background-color: #b2c3d4;
     border-bottom: 1px solid #d9d9d9;
     width: 70%;
 }
@@ -385,6 +385,18 @@
 /* Highlight Selected Shape */
 .sapGanttSelectedShape {
     filter: drop-shadow(0px 0px 8px rgba(37, 99, 235, 0.5));
+}
+
+.restBreakShapeTitle text {
+font-size: 9px !important;
+font-weight: 600 !important;
+font-family: "72", Arial, sans-serif !important;
+}
+
+.TableRowText text {
+font-size: 9px !important;
+font-weight: 200 !important;
+font-family: "72", Arial, sans-serif !important;
 }
 
 @media (max-width: 720px) {

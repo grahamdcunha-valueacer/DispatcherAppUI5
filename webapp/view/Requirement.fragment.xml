@@ -29,7 +29,7 @@
         selectable="true"
         draggable="true"
         title="{data>id}"
-        showTitle="true"
+        showTitle="false"
         titleColor="black"
         fill="{	parts: [
 					{ path: 'data>Veh_id' },

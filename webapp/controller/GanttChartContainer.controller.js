@@ -31,12 +31,10 @@ sap.ui.define([
 			// );
 
 			var oFromDate = new Date(oToday);
-			oFromDate.setDate(oFromDate.getDate() - 7);
+			oFromDate.setDate(oFromDate.getDate() - 1);
 
 			var oToDate = new Date(oToday);
-			oToDate.setDate(oToDate.getDate() + 7);
-
-			
+			oToDate.setDate(oToDate.getDate() + 3);
 
 			var sSettings =
 				localStorage.getItem("DispatcherZoneSettings");
@@ -52,7 +50,7 @@ sap.ui.define([
 			// aDeferredGroups = aDeferredGroups.concat(["deferred"]);
 			// oDataModel.setDeferredGroups(aDeferredGroups);
 
-			this._updateHorizon(oFromDate,oToDate);			
+			this._updateHorizon(oFromDate, oToDate);
 			this.onLoadData();
 			this.iNewFOCount = 0;
 			/********************************************************************************************* */
@@ -75,7 +73,7 @@ sap.ui.define([
 					//oGantt1.setShowBirdEye(true);
 				}
 			});
-			
+
 			/********************************************************************************************* */
 			var oGantt2 = this.getView().byId("Truck");
 			var oFullScreenButton2 = new sap.m.Button({
@@ -93,7 +91,7 @@ sap.ui.define([
 					}
 				}
 			});
-			
+
 			/********************************************************************************************* */
 			var oGantt3 = this.getView().byId("Driver");
 			var oFullScreenButton3 = new sap.m.Button({
@@ -134,21 +132,546 @@ sap.ui.define([
 				sap.m.MessageToast.show("Please select From Date and To Date");
 				return;
 			}
-			this._updateHorizon(oFromDate,oToDate);
+			if (oFromDate.getTime() > oToDate.getTime()) {
+				sap.m.MessageToast.show(
+					"From Date cannot be later than To Date"
+				);
+				return;
+			}
+			this._updateHorizon(oFromDate, oToDate);
+			try {
 
-			await this.getOwnerComponent().loadMasterData(
-				oFromDate,
-				oToDate,
-				oDc
-			);			
+				await this.getOwnerComponent().loadMasterData(
+					oFromDate,
+					oToDate,
+					oDc
+				);
+				/*
+				* loadMasterData() populates data>/Requirements.
+				* Prepare nested rest-break shapes after the service returns.
+				*/
+				this._prepareFreightOrderShapes();
+				this._prepareDriverData();
+				this._prepareDriverShiftShapes(oFromDate, oToDate);
+
+			} catch (oError) {
+				console.error(
+					"Unable to load cockpit data",
+					oError
+				);
+
+				sap.m.MessageToast.show(
+					oError?.message ||
+					"Unable to load cockpit data"
+				);
+			}
+
 		},
 		onFilter: function () {
 			this.applyFilters();
 
 		},
 
-		_updateHorizon: function (oFromDate,oToDate) {	
-			
+		_prepareFreightOrderShapes: function () {
+			var oDataModel = this.getView().getModel("data");
+
+			if (!oDataModel) {
+				console.error("The named model 'data' is not available");
+				return;
+			}
+
+			var aRequirements =
+				oDataModel.getProperty("/Requirements") || [];
+
+			aRequirements.forEach(function (oFO, iFoIndex) {
+				var aRestBreaks = Array.isArray(oFO.restBreaks)
+					? oFO.restBreaks
+					: [];
+
+				/*
+				* Keep the FO properties unchanged.
+				* Add a Gantt-specific nested collection.
+				*/
+				oFO.RestBreakShapes = aRestBreaks
+					.filter(function (oBreak) {
+						return (
+							oBreak &&
+							oBreak.rest_startTime &&
+							oBreak.rest_endTime
+						);
+					})
+					.map(function (oBreak, iBreakIndex) {
+						var sType = String(
+							oBreak.restType || "BREAK"
+						).toUpperCase();
+
+						var sFoId =
+							oFO.id ||
+							oFO.transportationOrderUUID ||
+							"FO-" + iFoIndex;
+
+						return {
+							shapeId: [
+								sFoId,
+								sType,
+								iBreakIndex
+							].join("-"),
+
+							RequirementId: oFO.id,
+							TransportationOrderUUID:
+								oFO.transportationOrderUUID,
+
+							Type: sType,
+							Title: sType,
+
+							StartTime: oBreak.rest_startTime,
+							EndTime: oBreak.rest_endTime,
+
+							FillColor: this._getRestBreakColor(sType),
+
+							Tooltip:
+								this._createRestBreakTooltip(
+									sType,
+									oBreak.rest_startTime,
+									oBreak.rest_endTime
+								)
+						};
+					}.bind(this));
+			}.bind(this));
+
+			/*
+			* setProperty triggers the binding update.
+			* Use a new array reference so JSONModel notices the change.
+			*/
+			oDataModel.setProperty(
+				"/Requirements",
+				aRequirements.slice()
+			);
+
+			console.log(
+				"Requirements prepared for Gantt:",
+				oDataModel.getProperty("/Requirements")
+			);
+
+			if (aRequirements.length > 0) {
+				console.log(
+					"First FO rest-break shapes:",
+					aRequirements[0].RestBreakShapes
+				);
+			}
+		},
+
+
+		_getRestBreakColor: function (sType) {
+			switch (String(sType || "").toUpperCase()) {
+				case "REST":
+					return "#6D28D9";
+
+				case "BREAK":
+					return "#E9730C";
+
+				default:
+					return "#6A6D70";
+			}
+		},
+
+		_prepareDriverData: function () {
+			var oDataModel = this.getView().getModel("data");
+
+			if (!oDataModel) {
+				console.error("Named model 'data' is not available");
+				return;
+			}
+
+			var vDriverData = oDataModel.getProperty("/Drivers");
+			var aDrivers = [];
+
+			/*
+			* Normalize the Driver response.
+			*/
+			if (Array.isArray(vDriverData)) {
+				aDrivers = vDriverData;
+			} else if (Array.isArray(vDriverData?.value)) {
+				aDrivers = vDriverData.value;
+			} else if (Array.isArray(vDriverData?.results)) {
+				aDrivers = vDriverData.results;
+			}
+
+			/*
+			* Remove @odata.context strings and other invalid entries.
+			*/
+			aDrivers = aDrivers.filter(function (oDriver) {
+				return (
+					oDriver !== null &&
+					typeof oDriver === "object" &&
+					!Array.isArray(oDriver)
+				);
+			});
+
+			/*
+			* Always return a new object.
+			* Do not directly add properties to the original value.
+			*/
+			aDrivers = aDrivers.map(function (oDriver, iIndex) {
+				var sDriverId =
+					oDriver.driverID ||
+					oDriver.driverId ||
+					oDriver.DriverID ||
+					oDriver.DriverId ||
+					oDriver.id ||
+					oDriver.ID ||
+					"DRIVER-" + iIndex;
+
+				var sFirstName =
+					oDriver.firstName ||
+					oDriver.FirstName ||
+					oDriver.first_name ||
+					oDriver.givenName ||
+					"";
+
+				var sLastName =
+					oDriver.lastName ||
+					oDriver.LastName ||
+					oDriver.last_name ||
+					oDriver.familyName ||
+					"";
+
+				var sValidFrom =
+					oDriver.resourceValidFrom ||
+					oDriver.ResourceValidFrom ||
+					oDriver.validFrom ||
+					oDriver.ValidFrom ||
+					oDriver.startTime ||
+					oDriver.StartTime ||
+					"";
+
+				var sValidTo =
+					oDriver.resourceValidTo ||
+					oDriver.ResourceValidTo ||
+					oDriver.validTo ||
+					oDriver.ValidTo ||
+					oDriver.endTime ||
+					oDriver.EndTime ||
+					"";
+
+				return Object.assign({}, oDriver, {
+					driverID: sDriverId,
+					firstName: sFirstName,
+					lastName: sLastName,
+					resourceValidFrom: sValidFrom,
+					resourceValidTo: sValidTo,
+					resourceType: "Driver"
+					//selected: Boolean(oDriver.selected)
+				});
+			});
+
+			oDataModel.setProperty("/Drivers", aDrivers);
+
+			console.log("Prepared driver count:", aDrivers.length);
+			console.log("Prepared Drivers:", aDrivers);
+		},
+
+		_prepareDriverShiftShapes: function (
+			oSelectedFromDate,
+			oSelectedToDate
+		) {
+			var oDataModel = this.getView().getModel("data");
+
+			if (!oDataModel) {
+				console.error("Named model 'data' is not available");
+				return;
+			}
+
+			var aDrivers = oDataModel.getProperty("/Drivers") || [];
+
+			var oRangeStart = new Date(oSelectedFromDate);
+			var oRangeEnd = new Date(oSelectedToDate);
+
+			oRangeStart.setHours(0, 0, 0, 0);
+			oRangeEnd.setHours(23, 59, 59, 999);
+
+			aDrivers = aDrivers.map(function (oDriver, iIndex) {
+				var aShifts = Array.isArray(oDriver.shifts)
+					? oDriver.shifts
+					: [];
+
+				/*
+				 * Find the earliest shiftValidFrom and the latest
+				 * shiftValidUntil across all shifts of the driver.
+				 */
+				var aValidFromDates = aShifts
+					.map(function (oShift) {
+						return this._parseYYYYMMDD(
+							oShift.shiftValidFrom
+						);
+					}.bind(this))
+					.filter(Boolean);
+
+				var aValidUntilDates = aShifts
+					.map(function (oShift) {
+						return this._parseYYYYMMDD(
+							oShift.shiftValidUntil
+						);
+					}.bind(this))
+					.filter(Boolean);
+
+				var oShiftPeriodStart = aValidFromDates.length
+					? new Date(
+						Math.min.apply(
+							null,
+							aValidFromDates.map(function (oDate) {
+								return oDate.getTime();
+							})
+						)
+					)
+					: null;
+
+				var oShiftPeriodEnd = aValidUntilDates.length
+					? new Date(
+						Math.max.apply(
+							null,
+							aValidUntilDates.map(function (oDate) {
+								return oDate.getTime();
+							})
+						)
+					)
+					: null;
+
+				/*
+				 * Include the complete final day.
+				 */
+				if (oShiftPeriodEnd) {
+					oShiftPeriodEnd.setHours(
+						23,
+						59,
+						59,
+						999
+					);
+				}
+
+				return Object.assign({}, oDriver, {
+					driverID:
+						oDriver.driverID ||
+						oDriver.driverId ||
+						"DRIVER-" + iIndex,
+
+					firstName: oDriver.firstName || "",
+					lastName: oDriver.lastName || "",
+					resourceType: "Driver",
+					ShiftPeriodStart: oShiftPeriodStart ? oShiftPeriodStart.toISOString() : null,
+					ShiftPeriodEnd: oShiftPeriodEnd ? oShiftPeriodEnd.toISOString() : null,
+					ShiftPeriodTitle:oShiftPeriodStart && oShiftPeriodEnd ? "Total Shift Period": "",
+					shifts: aShifts
+				});
+			}.bind(this));
+
+			aDrivers = aDrivers.map(function (oDriver) {
+				var aShifts = Array.isArray(oDriver.shifts)
+					? oDriver.shifts
+					: [];
+
+				var aShiftShapes = [];
+
+				aShifts.forEach(function (oShift, iShiftIndex) {
+					var oShiftValidFrom =
+						this._parseYYYYMMDD(
+							oShift.shiftValidFrom
+						);
+
+					var oShiftValidUntil =
+						this._parseYYYYMMDD(
+							oShift.shiftValidUntil
+						);
+
+					if (!oShiftValidFrom || !oShiftValidUntil) {
+						console.warn(
+							"Invalid shift validity dates:",
+							oDriver.driverID,
+							oShift
+						);
+
+						return;
+					}
+
+					/*
+					* Limit generated shapes to the selected cockpit
+					* horizon and the shift validity period.
+					*/
+					var oEffectiveStart = new Date(
+						Math.max(
+							oRangeStart.getTime(),
+							oShiftValidFrom.getTime()
+						)
+					);
+
+					var oEffectiveEnd = new Date(
+						Math.min(
+							oRangeEnd.getTime(),
+							oShiftValidUntil.getTime()
+						)
+					);
+
+					oEffectiveStart.setHours(0, 0, 0, 0);
+					oEffectiveEnd.setHours(23, 59, 59, 999);
+
+					if (
+						oEffectiveStart.getTime() >
+						oEffectiveEnd.getTime()
+					) {
+						return;
+					}
+
+					var aWorkingDays =
+						this._getShiftWorkingDays(
+							oShift.shiftSequence,
+							oDriver.calendarDays
+						);
+
+					var iStartSeconds =
+						Number(oShift.shiftStartTime);
+
+					var iEndSeconds =
+						Number(oShift.shiftEndTime);
+
+					if (
+						Number.isNaN(iStartSeconds) ||
+						Number.isNaN(iEndSeconds)
+					) {
+						console.warn(
+							"Invalid shift start/end seconds:",
+							oShift
+						);
+
+						return;
+					}
+
+					var oCurrentDate =
+						new Date(oEffectiveStart);
+
+					while (
+						oCurrentDate.getTime() <=
+						oEffectiveEnd.getTime()
+					) {
+						var iWeekday = oCurrentDate.getDay();
+
+						if (aWorkingDays.includes(iWeekday)) {
+							var oShiftStart =
+								this._dateWithSeconds(
+									oCurrentDate,
+									iStartSeconds
+								);
+
+							var oShiftEnd =
+								this._dateWithSeconds(
+									oCurrentDate,
+									iEndSeconds
+								);
+
+							/*
+							* Handle an overnight shift, for example:
+							* 22:00 to 06:00.
+							*/
+							if (
+								iEndSeconds <= iStartSeconds
+							) {
+								oShiftEnd.setDate(
+									oShiftEnd.getDate() + 1
+								);
+							}
+
+							aShiftShapes.push({
+								shapeId: [
+									oDriver.driverID,
+									"SHIFT",
+									iShiftIndex,
+									this._formatDateKey(
+										oCurrentDate
+									)
+								].join("-"),
+
+								Type: "SHIFT",
+								DriverID: oDriver.driverID,
+								Title:
+									oShift.shiftDefinition ||
+									"Shift",
+
+								StartTime:
+									oShiftStart.toISOString(),
+
+								EndTime:
+									oShiftEnd.toISOString(),
+
+								ShiftSequence:
+									oShift.shiftSequence,
+
+								ShiftDefinition:
+									oShift.shiftDefinition,
+
+								Tooltip:
+									this._createShiftTooltip(
+										oDriver,
+										oShift,
+										oShiftStart,
+										oShiftEnd
+									)
+							});
+						}
+
+						oCurrentDate.setDate(
+							oCurrentDate.getDate() + 1
+						);
+					}
+				}.bind(this));
+
+				return Object.assign({}, oDriver, {
+					ShiftShapes: aShiftShapes
+				});
+			}.bind(this));
+
+
+
+
+			oDataModel.setProperty(
+				"/Drivers",
+				aDrivers
+			);
+
+			console.log(
+				"Drivers with ShiftShapes:",
+				aDrivers
+			);
+		},
+
+		_createRestBreakTooltip: function (
+			sType,
+			sStartTime,
+			sEndTime
+		) {
+			var oStartDate = new Date(sStartTime);
+			var oEndDate = new Date(sEndTime);
+
+			var iDurationMinutes = Math.round(
+				(oEndDate.getTime() - oStartDate.getTime()) /
+				(60 * 1000)
+			);
+
+			var iHours = Math.floor(iDurationMinutes / 60);
+			var iMinutes = iDurationMinutes % 60;
+
+			var sDuration = iHours > 0
+				? iHours + "h " + iMinutes + "m"
+				: iMinutes + "m";
+
+			return [
+				sType,
+				"Start: " + sStartTime,
+				"End: " + sEndTime,
+				"Duration: " + sDuration
+			].join("\n");
+		},
+
+		_updateHorizon: function (oFromDate, oToDate) {
+
 			this.byId("dpFromDate").setDateValue(oFromDate);
 			this.byId("dpToDate").setDateValue(oToDate);
 			var sStart =
@@ -163,7 +686,7 @@ sap.ui.define([
 				String(oToDate.getDate()).padStart(2, "0") +
 				"235959";
 
-			
+
 			var oViewModel = new sap.ui.model.json.JSONModel({
 				horizonStart: sStart,
 				horizonEnd: sEnd
@@ -185,7 +708,7 @@ sap.ui.define([
 
 		},
 
-		onShapeDrop: async function (oEvent) {
+		onShapeDropV1: async function (oEvent) {
 
 			try {
 
@@ -238,15 +761,64 @@ sap.ui.define([
 					// console.log(newDepartureEnd);
 					// console.log(restBreaks);
 
-					var aRestBreakShapes = restBreaks.map(function (oBreak) {
-						return {
-							Type: oBreak.restType,
-							StartTime: oBreak.rest_startTime,
-							EndTime: oBreak.rest_endTime
-						};
-					});
+					var oDataModel = oSourceGantt.getModel("data");
 
-					oDataModel.setProperty("/CurrentRestBreaks", aRestBreakShapes);
+					var sDraggedPath =
+						Utility.parseUid(sLastDraggedShapeUid).shapeDataName;
+
+					var oDraggedFO =
+						oDataModel.getProperty(sDraggedPath);
+
+					if (!oDraggedFO) {
+						throw new Error(
+							"Unable to find the dragged Freight Order"
+						);
+					}
+
+					var aRestBreakShapes = (
+						Array.isArray(restBreaks) ? restBreaks : []
+					).map(function (oBreak, iIndex) {
+						var sType = String(
+							oBreak.restType || "BREAK"
+						).toUpperCase();
+
+						return {
+							shapeId: [
+								oDraggedFO.id,
+								sType,
+								iIndex
+							].join("-"),
+
+							RequirementId: oDraggedFO.id,
+							Type: sType,
+							Title: sType,
+							StartTime: oBreak.rest_startTime,
+							EndTime: oBreak.rest_endTime,
+							FillColor: this._getRestBreakColor(sType),
+
+							Tooltip: this._createRestBreakTooltip(
+								sType,
+								oBreak.rest_startTime,
+								oBreak.rest_endTime
+							)
+						};
+					}.bind(this));
+
+					oDataModel.setProperty(
+						sDraggedPath + "/RestBreakShapes",
+						aRestBreakShapes
+					);
+
+					oDataModel.setProperty(
+						sDraggedPath + "/Departure_Time",
+						newDepartureStart
+					);
+
+					oDataModel.setProperty(
+						sDraggedPath + "/Arrival_Time",
+						newDepartureEnd
+					);
+
 					oDataModel.refresh(true);
 
 					// Convert API datetime string to JS Date
@@ -289,12 +861,14 @@ sap.ui.define([
 
 						if (sTargetObjectType == "Truck") {
 							that.handleMoveFreightOrderToTruck(oNewDateTime.toISOString().replace(".000", ""), oNewEndDateTime.toISOString().replace(".000", ""), oTargetObject, sPath, oDataModel, iMoveWidthInMs);
+							sap.m.MessageToast.show(`Dispatcher Data updated successfully.`);
 						}
 						else {
 							that.applySimulationResultToFreightOrder(oNewDateTime.toISOString().replace(".000", ""), oNewEndDateTime.toISOString().replace(".000", ""), oTargetObject, sPath, oDataModel);
+							sap.m.MessageToast.show(`Freight Order updated successfully. Start: ${oNewDateTime}, End: ${oNewEndDateTime}`);
 						}
 					});
-					sap.m.MessageToast.show(`Freight Order updated successfully. Start: ${oNewDateTime}, End: ${oNewEndDateTime}`);
+
 					this.byId("UseAI").setEnabled(false);
 				}
 
@@ -311,45 +885,354 @@ sap.ui.define([
 			}
 		},
 
-		handleMoveFreightUnitToTruck: function (oTime, oEndTime, oTargetObject, sPath, oModel) {
-			var oData = oModel.getObject(sPath);
+		onShapeDrop: async function (oEvent) {
+			var oSourceGantt = oEvent.getSource();
+			var oDataModel = oSourceGantt.getModel("data");
 
-			var sTargetResourceId = oTargetObject.id;
-			this.iNewFOCount++;
-			var sNewFOId = "$" + this.iNewFOCount;
+			try {
+				var mDraggedShapeDates =
+					oEvent.getParameter("draggedShapeDates") || {};
 
-			oData.ParentRequirementID = sNewFOId;
-			oData.ResourceID = sTargetResourceId;
-			oData.StartTime = oTime;
-			oData.EndTime = oEndTime;
-			oData.HierarchyLevel = 1;
-			oData.PlanStatus = "planned";
+				var sDraggedShapeUid =
+					oEvent.getParameter("lastDraggedShapeUid");
 
-			var oFreightOrderData = {
-				"RequirementID": sNewFOId,
-				"ResourceID": sTargetResourceId,
-				"Type": "FO",
-				"PlanStatus": "planned",
-				"StartTime": oTime,
-				"EndTime": oEndTime,
-				"SourceLocation": oData.SourceLocation,
-				"DestinationLocation": oData.DestinationLocation,
-				"ParentResourceID": sTargetResourceId,
-				"ParentRequirementID": null,
-				"HierarchyLevel": 0,
-				"DrillState": "expanded"
-			};
+				var oTargetRow =
+					oEvent.getParameter("targetRow");
 
-			oModel.create("/Requirements", oFreightOrderData);
+				var oDroppedDate =
+					oEvent.getParameter("newDateTime");
 
-			var mParameters = {
-				success: function (oData) {
-					//mockserver.refreshResource(oModel, sTargetResourceId);
-				},
-				refreshAfterChange: false
-			};
-			oModel.update(sPath, oData, mParameters);
+				if (!sDraggedShapeUid) {
+					throw new Error("Dragged Freight Order was not identified");
+				}
+
+				if (!oTargetRow) {
+					throw new Error("Please drop the Freight Order on a resource row");
+				}
+
+				/*
+				* Parse the dragged shape UID.
+				* shapeDataName contains the JSONModel binding path,
+				* for example /Requirements/0.
+				*/
+				var oParsedUid = Utility.parseUid(sDraggedShapeUid);
+				var sFoPath = oParsedUid.shapeDataName;
+
+				var oFreightOrder =
+					oDataModel.getProperty(sFoPath);
+
+				if (!oFreightOrder) {
+					throw new Error(
+						"Freight Order data was not found at " + sFoPath
+					);
+				}
+
+				/*
+				* Prevent REST/BREAK shapes from being processed as FOs.
+				*/
+				if (
+					sFoPath.indexOf("/RestBreakShapes/") !== -1 ||
+					oFreightOrder.Type === "REST" ||
+					oFreightOrder.Type === "BREAK"
+				) {
+					sap.m.MessageToast.show(
+						"Only Freight Orders can be assigned"
+					);
+					return;
+				}
+
+				var oTargetContext =
+					oTargetRow.getBindingContext("data");
+
+				if (!oTargetContext) {
+					throw new Error(
+						"The target resource row has no data context"
+					);
+				}
+
+				var oTargetResource =
+					oTargetContext.getObject();
+
+				var sResourceType =
+					oTargetResource.resourceType ||
+					oTargetResource.ResourceType ||
+					"";
+
+				if (
+					sResourceType !== "09" &&
+					sResourceType !== "Vehicle"
+				) {
+					sap.m.MessageToast.show(
+						"Drop the Freight Order on a truck or vehicle row"
+					);
+					return;
+				}
+
+				/*
+				* Handle the different resource-ID names returned by
+				* your resource service.
+				*/
+				var sTargetVehicleId =
+					oTargetResource.resourceId ||
+					oTargetResource.ResourceID ||
+					oTargetResource.id ||
+					oTargetResource.Veh_id ||
+					oTargetResource.veh_regno;
+
+				if (!sTargetVehicleId) {
+					throw new Error(
+						"The target vehicle does not contain a resource ID"
+					);
+				}
+
+				var oDraggedDates =
+					mDraggedShapeDates[sDraggedShapeUid];
+
+				if (!oDraggedDates) {
+					throw new Error(
+						"Original Freight Order dates were not found"
+					);
+				}
+
+				var oOldStart = oDraggedDates.time;
+				var oOldEnd = oDraggedDates.endTime;
+
+				if (!(oOldStart instanceof Date)) {
+					oOldStart = new Date(oOldStart);
+				}
+
+				if (!(oOldEnd instanceof Date)) {
+					oOldEnd = new Date(oOldEnd);
+				}
+
+				var oNewStart = oDroppedDate instanceof Date
+					? new Date(oDroppedDate.getTime())
+					: new Date(oDroppedDate);
+
+				if (Number.isNaN(oNewStart.getTime())) {
+					throw new Error("The dropped date/time is invalid");
+				}
+
+				var iDuration =
+					oOldEnd.getTime() - oOldStart.getTime();
+
+				var oNewEnd = new Date(
+					oNewStart.getTime() + iDuration
+				);
+
+				/*
+				* Ask the backend for the recalculated FO dates and
+				* mandatory rest periods.
+				*/
+				var sTorKey = String(
+					oFreightOrder.transportationOrderUUID ||
+					oFreightOrder.id ||
+					""
+				)
+					.replace(/-/g, "")
+					.toUpperCase();
+
+				var oResponse =
+					await FreightOrderService.GetFOSimilution({
+						IvTorKey: sTorKey,
+						IvNewDepartureDatetime:
+							formatter.formatDate(oNewStart)
+					});
+
+				var oSimulation =
+					oResponse?.value?.[0]?.simulationResults?.[0];
+
+				if (!oSimulation) {
+					throw new Error(
+						"No simulation result was returned"
+					);
+				}
+
+				if (oSimulation.updateRc === "F") {
+					throw new Error(
+						oSimulation.updateMessage ||
+						"Freight Order simulation failed"
+					);
+				}
+
+				/*
+				* Prefer the dates returned by simulation.
+				* Use calculated dates as fallback.
+				*/
+				var sNewDeparture =
+					oSimulation.newDepartureStart ||
+					oNewStart.toISOString();
+
+				var sNewArrival =
+					oSimulation.newDepartureEnd ||
+					oNewEnd.toISOString();
+
+				var aRestBreakShapes = (
+					Array.isArray(oSimulation.restBreaks)
+						? oSimulation.restBreaks
+						: []
+				).map(function (oBreak, iIndex) {
+					var sType = String(
+						oBreak.restType || "BREAK"
+					).toUpperCase();
+
+					return {
+						shapeId: [
+							oFreightOrder.id,
+							sType,
+							iIndex
+						].join("-"),
+
+						RequirementId: oFreightOrder.id,
+						Type: sType,
+						Title: sType,
+						StartTime: oBreak.rest_startTime,
+						EndTime: oBreak.rest_endTime,
+						FillColor:
+							this._getRestBreakColor(sType),
+
+						Tooltip:
+							this._createRestBreakTooltip(
+								sType,
+								oBreak.rest_startTime,
+								oBreak.rest_endTime
+							)
+					};
+				}.bind(this));
+
+				/*
+				* Update the current FO row using the JSONModel API.
+				*/
+				oDataModel.setProperty(
+					sFoPath + "/Departure_Time",
+					sNewDeparture
+				);
+
+				oDataModel.setProperty(
+					sFoPath + "/Arrival_Time",
+					sNewArrival
+				);
+
+				oDataModel.setProperty(
+					sFoPath + "/Veh_id",
+					sTargetVehicleId
+				);
+
+				oDataModel.setProperty(
+					sFoPath + "/veh_regno",
+					oTargetResource.veh_regno ||
+					sTargetVehicleId
+				);
+
+				oDataModel.setProperty(
+					sFoPath + "/RestBreakShapes",
+					aRestBreakShapes
+				);
+
+				/*
+				* Keep changes for the Save API.
+				*/
+				this._addChangedFreightOrder({
+					IvTorKey: sTorKey,
+					IvTorID: oFreightOrder.id,
+					IvNewDepartureDatetime:
+						this._toBackendDateTime(sNewDeparture),
+					IvDriverId:
+						oFreightOrder.driver_id || "",
+					IvVehicleResId:
+						sTargetVehicleId
+				});
+
+				oDataModel.refresh(true);
+
+				this.byId("btnSave").setEnabled(true);
+
+				sap.m.MessageToast.show(
+					"FO " +
+					oFreightOrder.id +
+					" assigned to " +
+					sTargetVehicleId
+				);
+
+			} catch (oError) {
+				console.error("FO drop failed", oError);
+
+				sap.m.MessageToast.show(
+					oError?.response?.data?.error?.message ||
+					oError?.message ||
+					"Unable to assign Freight Order"
+				);
+			}
 		},
+		_toBackendDateTime: function (vDate) {
+			var oDate = vDate instanceof Date
+				? vDate
+				: new Date(vDate);
+
+			if (Number.isNaN(oDate.getTime())) {
+				return "";
+			}
+
+			return oDate
+				.toISOString()
+				.replace(/[-:]/g, "")
+				.replace(/\.\d{3}Z$/, "");
+		},
+
+		_addChangedFreightOrder: function (oChange) {
+			this.aChangedFOs = this.aChangedFOs || [];
+
+			var iExistingIndex =
+				this.aChangedFOs.findIndex(function (oItem) {
+					return oItem.IvTorID === oChange.IvTorID;
+				});
+
+			if (iExistingIndex >= 0) {
+				this.aChangedFOs[iExistingIndex] = oChange;
+			} else {
+				this.aChangedFOs.push(oChange);
+			}
+		},
+
+		// handleMoveFreightUnitToTruck: function (oTime, oEndTime, oTargetObject, sPath, oModel) {
+		// 	var oData = oModel.getObject(sPath);
+
+		// 	var sTargetResourceId = oTargetObject.id;
+		// 	this.iNewFOCount++;
+		// 	var sNewFOId = "$" + this.iNewFOCount;
+
+		// 	oData.ParentRequirementID = sNewFOId;
+		// 	oData.ResourceID = sTargetResourceId;
+		// 	oData.StartTime = oTime;
+		// 	oData.EndTime = oEndTime;
+		// 	oData.HierarchyLevel = 1;
+		// 	oData.PlanStatus = "planned";
+
+		// 	var oFreightOrderData = {
+		// 		"RequirementID": sNewFOId,
+		// 		"ResourceID": sTargetResourceId,
+		// 		"Type": "FO",
+		// 		"PlanStatus": "planned",
+		// 		"StartTime": oTime,
+		// 		"EndTime": oEndTime,
+		// 		"SourceLocation": oData.SourceLocation,
+		// 		"DestinationLocation": oData.DestinationLocation,
+		// 		"ParentResourceID": sTargetResourceId,
+		// 		"ParentRequirementID": null,
+		// 		"HierarchyLevel": 0,
+		// 		"DrillState": "expanded"
+		// 	};
+
+		// 	oModel.create("/Requirements", oFreightOrderData);
+
+		// 	var mParameters = {
+		// 		success: function (oData) {
+		// 			//mockserver.refreshResource(oModel, sTargetResourceId);
+		// 		},
+		// 		refreshAfterChange: false
+		// 	};
+		// 	oModel.update(sPath, oData, mParameters);
+		// },
 
 		handleMoveFreightOrderToTruck: function (oTime, oEndTime, oTargetObject, sPath, oModel, iMoveWidthInMs) {
 			var oData = oModel.getObject(sPath);
@@ -1113,7 +1996,7 @@ sap.ui.define([
 		_applyZoneSettings: function (oSettings) {
 
 			// Example:
-			console.log("Zone Settings:", oSettings);
+			//console.log("Zone Settings:", oSettings);
 
 			// Show / Hide Truck Availability
 			// Show / Hide Freight Orders
@@ -1176,7 +2059,185 @@ sap.ui.define([
 				}
 			);
 
-		}
+		},
+		_parseYYYYMMDD: function (sDate) {
+			if (
+				typeof sDate !== "string" ||
+				!/^\d{8}$/.test(sDate)
+			) {
+				return null;
+			}
+
+			var iYear = Number(sDate.substring(0, 4));
+			var iMonth = Number(sDate.substring(4, 6)) - 1;
+			var iDay = Number(sDate.substring(6, 8));
+
+			return new Date(
+				iYear,
+				iMonth,
+				iDay,
+				0,
+				0,
+				0,
+				0
+			);
+		},
+
+		_dateWithSeconds: function (
+			oBaseDate,
+			iSeconds
+		) {
+			var oDate = new Date(oBaseDate);
+
+			oDate.setHours(0, 0, 0, 0);
+			oDate.setSeconds(iSeconds);
+
+			return oDate;
+		},
+
+		_formatDateKey: function (oDate) {
+			return [
+				oDate.getFullYear(),
+				String(
+					oDate.getMonth() + 1
+				).padStart(2, "0"),
+				String(
+					oDate.getDate()
+				).padStart(2, "0")
+			].join("");
+		},
+		_getShiftWorkingDays: function (
+			sShiftSequence,
+			aCalendarDays
+		) {
+			/*
+			* JavaScript weekday numbers:
+			* Sunday = 0
+			* Monday = 1
+			* Tuesday = 2
+			* Wednesday = 3
+			* Thursday = 4
+			* Friday = 5
+			* Saturday = 6
+			*/
+
+			var mWeekdays = {
+				SUN: 0,
+				MON: 1,
+				TUE: 2,
+				WED: 3,
+				THU: 4,
+				FRI: 5,
+				SAT: 6
+			};
+
+			var sSequence =
+				String(sShiftSequence || "")
+					.toUpperCase();
+
+			/*
+			* "MON FRI" is interpreted as a range,
+			* Monday through Friday.
+			*/
+			if (
+				sSequence.includes("MON") &&
+				sSequence.includes("FRI")
+			) {
+				return [1, 2, 3, 4, 5];
+			}
+
+			var aDays = [];
+
+			Object.keys(mWeekdays).forEach(
+				function (sDay) {
+					if (sSequence.includes(sDay)) {
+						aDays.push(mWeekdays[sDay]);
+					}
+				}
+			);
+
+			/*
+			* If no weekday was found, use calendarDays
+			* where possible.
+			*/
+			if (
+				aDays.length === 0 &&
+				Array.isArray(aCalendarDays)
+			) {
+				aCalendarDays.forEach(function (oDay) {
+					if (
+						!oDay ||
+						typeof oDay !== "object"
+					) {
+						return;
+					}
+
+					var sDayName = String(
+						oDay.day ||
+						oDay.dayName ||
+						oDay.weekDay ||
+						oDay.weekday ||
+						""
+					).substring(0, 3).toUpperCase();
+
+					var bWorkingDay =
+						oDay.workingDay !== false &&
+						oDay.isWorkingDay !== false &&
+						oDay.available !== false;
+
+					if (
+						bWorkingDay &&
+						mWeekdays[sDayName] !== undefined
+					) {
+						aDays.push(
+							mWeekdays[sDayName]
+						);
+					}
+				});
+			}
+
+			/*
+			* Safe default: Monday through Friday.
+			*/
+			return aDays.length > 0
+				? Array.from(new Set(aDays))
+				: [1, 2, 3, 4, 5];
+		},
+
+		_createShiftTooltip: function (
+			oDriver,
+			oShift,
+			oStartDate,
+			oEndDate
+		) {
+			var sDriverName = [
+				oDriver.firstName,
+				oDriver.lastName
+			]
+				.filter(Boolean)
+				.join(" ");
+
+			var fnFormat = function (oDate) {
+				return oDate.toLocaleString();
+			};
+
+			return [
+				"Driver: " +
+				(
+					sDriverName ||
+					oDriver.driverID
+				),
+
+				"Shift: " +
+				(
+					oShift.shiftDefinition ||
+					""
+				),
+
+				"Start: " + fnFormat(oStartDate),
+				"End: " + fnFormat(oEndDate)
+			].join("\n");
+		},
 
 
 	});

@@ -25,7 +25,7 @@
 
 			<gnt2:toolbar>				
 				<gnt2:ContainerToolbar id="toolbar" design="Auto" showBirdEyeButton="true" showLegendButton="true" ganttSidePanel=".onGanttSidePanel" showSearchButton="true">		
-				<m:OverflowToolbar class="customGanttToolbar  sapUiResponsiveContentPadding">
+				<m:OverflowToolbar class=" customGanttToolbar sapUiResponsiveContentPadding">
 				 <m:Label text="From Date" class="sapUiTinyMarginEnd dashboardHeader"/>
 				 <m:DateTimePicker
                        value=""
@@ -78,6 +78,9 @@
 					<gnt2:legendContainer>
 						<gnt2:LegendContainer id="legendContainer" width="250px" height="270px" enableFlatLegends="true">
 							<gnt2:ListLegend id="listLegend" title="Freight Order Assignments">
+								<gnt2:ListLegendItem interactive="false" selected="true" interactiveChange=".onLegendItemInteractiveChange">									
+									<gnt2:BaseRectangle shapeId="legendItemNotAssigned" fill="#CCCCCC" title="Not Assigned" showTitle="false"/>
+								</gnt2:ListLegendItem>	
 								<gnt2:ListLegendItem interactive="false" selected="true" interactiveChange=".onLegendItemInteractiveChange">
 									<gnt2:BaseRectangle shapeId="legendItemFully" fill="#22C55E" title="Fully Assigned" showTitle="false"/>									
 								</gnt2:ListLegendItem>
@@ -86,7 +89,8 @@
 								</gnt2:ListLegendItem>
 								<gnt2:ListLegendItem interactive="false" selected="true" interactiveChange=".onLegendItemInteractiveChange">									
 									<gnt2:BaseRectangle shapeId="legendItemVehicle" fill="#dba7a7" title="Vehicle Assigned" showTitle="false"/>
-								</gnt2:ListLegendItem>								
+								</gnt2:ListLegendItem>	
+															
 							</gnt2:ListLegend>
 							<gnt2:ListLegend id="listLegend1" title="Calenders" visible="true">
 								<gnt2:ListLegendItem interactive="false" selected="false">
@@ -108,9 +112,9 @@
 			<!-- <core:Fragment fragmentName="dispatcherns.dispatcherproj.view.FreightOrderAndFreightUnit" type="XML"/> -->			
 			<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.FreightOrder" type="XML"/>
 			<!--End of Change: 16 September 2026 !-->
-
+			<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.DriverView" type="XML"/>   
 			 <core:Fragment fragmentName="dispatcherns.dispatcherproj.view.Truck" type="XML"/> 
-			 <core:Fragment fragmentName="dispatcherns.dispatcherproj.view.DriverView" type="XML"/>   
+			 
 		
 		</gnt2:GanttChartContainer>
 			<m:footer>

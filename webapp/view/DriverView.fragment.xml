@@ -1,122 +1,204 @@
 <core:FragmentDefinition
-	xmlns="sap.ui.table"
-	xmlns:m="sap.m"
-	xmlns:core="sap.ui.core"
-	xmlns:axistime="sap.gantt.axistime"
-	xmlns:config="sap.gantt.config"
-	xmlns:gnt2="sap.gantt.simple"
-	xmlns:gnt-cal="sap.gantt.def.cal"
-	xmlns:demokit="dispatcherns.dispatcherproj"
-	xmlns:rm="sap.ui.table.rowmodes"
-	core:require="{
+    xmlns="sap.ui.table"
+    xmlns:m="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:axistime="sap.gantt.axistime"
+    xmlns:config="sap.gantt.config"
+    xmlns:gnt2="sap.gantt.simple"
+    xmlns:gnt-cal="sap.gantt.def.cal"
+    xmlns:demokit="dispatcherns.dispatcherproj"
+    xmlns:rm="sap.ui.table.rowmodes"
+    core:require="{
 		formatMessage: 'sap/base/strings/formatMessage'
-	}">
-	<gnt2:GanttChartWithTable id="Driver" ghostAlignment="Start" adhocLineLayer="Bottom"
-			shapeSelectionMode = "Multiple"
-			enableChartOverflowToolbar="true"
-			shapeSelectionSettings="{color:'sapNegativeElementColor', strokeDasharray:'1,0'}"
-			shapeDrop=".onShapeDrop"
-			shapeResize=".onOrderRescheduled"
-			shapeDoubleClick=".onShapeDoubleClick"
-			class="resourceGanttCard"
-			>
-		<gnt2:table>
-			<Table
-				selectionMode="Single"
-				selectionBehavior="RowSelector"
-				enableColumnReordering="true"
-				fixedColumnCount = "1"
-				width="auto"
-				class="foGanttCard sapUiResponsiveContentPadding"
-				rows="{
+	}"
+>
+    <gnt2:GanttChartWithTable
+        id="Driver"
+        ghostAlignment="Start"
+        adhocLineLayer="Bottom"
+        shapeSelectionMode="Multiple"
+        enableChartOverflowToolbar="true"
+        shapeSelectionSettings="{color:'sapNegativeElementColor', strokeDasharray:'1,0'}"
+        shapeDrop=".onShapeDrop"
+        shapeResize=".onOrderRescheduled"
+        shapeDoubleClick=".onShapeDoubleClick"
+        class="driverGanttCard"
+    >
+        <gnt2:table>
+            <Table
+                selectionMode="Single"
+                selectionBehavior="RowSelector"
+                enableColumnReordering="true"
+                fixedColumnCount="1"
+                width="auto"
+                class="driverGanttCard sapUiResponsiveContentPadding"
+                rows="{
 					path: 'data>/Drivers',
 					parameters: {
-						operationMode: 'Server',
-						expand: 'ResourceToRequirements/OrderToUtilization/UtilizationToItems'
+						operationMode: 'Server'						
 					}
-				}">
-				<extension>
-					<m:OverflowToolbar class="driverToolbar sapUiResponsiveContentPadding sapUiSmallMarginTop">
-						<m:Title text="Drivers" level="H2"/> 
-						<m:ToolbarSpacer/>
-						<m:Button icon="sap-icon://expand-all" type="Transparent" press=".showUtilization"/>
-						<m:Button icon="sap-icon://collapse-all" type="Transparent" press=".hideUtilization"/>
-						<m:Button icon="sap-icon://refresh"/>	
-						
-					</m:OverflowToolbar>
-				</extension>
-				<rowMode>
-					<rm:Auto minRowCount="5"/>
-				</rowMode>
-				<rowSettingsTemplate>
-					<gnt2:GanttRowSettings
-						rowId="{data>driverId}"
-						shapes1="{
-							path: 'data>ResourceToDrivers',
-							templateShareable:true
-						}"
-						>
-						<!-- <gnt2:calendars>
-							<gnt2:BaseCalendar  shapeId="Weekend" calendarName="Weekend" fill="#e0ded6"/>
-						</gnt2:calendars> -->
-						<gnt2:calendars>
-							<gnt2:BaseCalendar shapeId="{data>driverId}" calendarName="{data>driverId}" fill="#ffffff"/>
-						</gnt2:calendars>
-						<gnt2:shapes1>
+				}"
+            >
+                <extension>
+                    <m:OverflowToolbar
+                        class="driverToolbar sapUiResponsiveContentPadding sapUiSmallMarginTop"
+                    >
+                        <m:Title
+                            text="Drivers"
+                            level="H2"
+                        />
+
+                        <m:ToolbarSpacer />
+                        <m:Button
+                            icon="sap-icon://expand-all"
+                            type="Transparent"
+                            press=".showUtilization"
+                        />
+                        <m:Button
+                            icon="sap-icon://collapse-all"
+                            type="Transparent"
+                            press=".hideUtilization"
+                        />
+                        <m:Button icon="sap-icon://refresh" />
+                    </m:OverflowToolbar>
+                </extension>
+                <rowMode>
+                    <rm:Auto minRowCount="5" />
+                </rowMode>
+                <rowSettingsTemplate>
+                    <gnt2:GanttRowSettings
+                        rowId="{data>driverID}"
+                        shapes2="{ path: 'data>ShiftShapes',templateShareable: false}"
+                    >
+					<!-- Driver validity background -->
+                        <gnt2:shapes1>
+                            <gnt2:BaseRectangle
+                                shapeId="{data>driverID}"
+                                time="{
+								path:'data>ShiftPeriodStart',
+								formatter:'.formatter.dateToObject'
+								}"
+                                endTime="{
+								path:'data>oShiftPeriodEnd',
+								formatter:'.formatter.dateToObject'
+								}"
+                                fill="#BCCAaf"
+                                stroke="#5B738B"
+                                height="22"
+                                strokeWidth="1"
+                                rx="4"
+                                ry="4"
+                                countInBirdEye="true"
+                                showTitle="true"
+                                tooltip="{
+											parts: [
+												'i18n>VehicleTooltip',
+												'data>driverID',
+												'data>ShiftPeriodStart',
+												'data>oShiftPeriodEnd'
+											],
+											formatter: 'formatMessage'
+									}"
+                                expandable="true"
+                                selectable="true"
+                                draggable="true"
+                                resizable="true"
+                            />
+                        </gnt2:shapes1>
+
+						<!-- Individual daily shifts -->
+							<gnt2:shapes2>
 							<gnt2:BaseRectangle
-									shapeId="{data>driverId}"
-									time="{data>StartTime}" endTime="{data>EndTime}" fill="#99D101"
-									countInBirdEye="true" height="25"									
-									showTitle="true"									
-									expandable="true" selectable="true" draggable="true" resizable="true"/>
-						</gnt2:shapes1>
-						<gnt2:shapes2>							
-						</gnt2:shapes2>
-					</gnt2:GanttRowSettings>
-				</rowSettingsTemplate>
-				<columns>
-					<Column>
-						<m:CheckBox text="Select" selected="{data>selected}" select=".onSelectDriver"></m:CheckBox>
-					</Column>
-					<Column sortProperty="driverId" filterProperty="driverId">
-						<m:Text text="Driver ID"/>
-						<template>
-							<m:Label text="{data>driverId}"/>
-						</template>
-					</Column>
-					<Column sortProperty="firstName" filterProperty="firstName">
-						<m:Text text="First Name"/>
-						<template>
-							<m:Label text="{data>firstName}"/>
-						</template>
-					</Column>
-					<Column sortProperty="lastName" filterProperty="lastName">
-						<m:Text text="Last Name" />
-						<template>
-							<m:Label text="{data>lastName}"/>
-						</template>
-					</Column>
-					
-				</columns>
-			</Table>
-		</gnt2:table>
+									shapeId="{data>shapeId}"
+									time="{
+											path: 'data>StartTime',
+											formatter: '.formatter.dateToObjectByZone'
+										  }"
+									endTime="{
+											path: 'data>EndTime',
+											formatter: '.formatter.dateToObjectByZone'
+											}"
+									title="{data>Title}"
+									showTitle="true"
+									titleColor="#1D2D3E"
+									fill="#99D101"
+									stroke="#4F6B00"
+									strokeWidth="1"
+									height="20"
+									rx="4"
+									ry="4"
+									countInBirdEye="true"
+									selectable="false"
+									draggable="false"
+									resizable="false"/>
+							</gnt2:shapes2>
+                    </gnt2:GanttRowSettings>
+                </rowSettingsTemplate>
+                <columns>
+                    <Column>
+                        <m:Text text="Select" />
+                        <m:CheckBox
+                            text="Select"
+                            select=".onSelectDrivers"
+                        />
+                    </Column>
+                    <Column
+                        sortProperty="driverID"
+                        filterProperty="driverID"
+                        width="140px"
+                    >
+                        <m:Text text="Driver ID" />
+                        <template>
+                            <m:Label text="{data>driverID}" />
+                        </template>
+                    </Column>
+                    <Column
+                        sortProperty="firstName"
+                        filterProperty="firstName"
+                    >
+                        <m:Text text="First Name" />
+                        <template>
+                            <m:Label text="{data>firstName}" />
+                        </template>
+                    </Column>
+                    <Column
+                        sortProperty="lastName"
+                        filterProperty="lastName"
+                        width="140px"
+                    >
+                        <m:Text text="Last Name" />
+                        <template>
+                            <m:Label text="{data>lastName}" />
+                        </template>
+                    </Column>
+                </columns>
+            </Table>
+        </gnt2:table>
 
-		<gnt2:shapeSchemes>
-			<gnt2:ShapeScheme key="truck" primary="true"/>
-			<gnt2:ShapeScheme key="truck_to_ulc" rowSpan="2"/>
-		</gnt2:shapeSchemes>
+        <gnt2:shapeSchemes>
+            <gnt2:ShapeScheme
+                key="truck"
+                primary="true"
+            />
+            <gnt2:ShapeScheme
+                key="truck_to_ulc"
+                rowSpan="2"
+            />
+        </gnt2:shapeSchemes>
 
-		<gnt2:axisTimeStrategy>
-			<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.AxisTimeStrategy" type="XML"/>
-		</gnt2:axisTimeStrategy>
+        <gnt2:axisTimeStrategy>
+            <core:Fragment
+                fragmentName="dispatcherns.dispatcherproj.view.AxisTimeStrategy"
+                type="XML"
+            />
+        </gnt2:axisTimeStrategy>
 
-		<gnt2:calendarDef>
+        <!-- <gnt2:calendarDef>
 			<gnt-cal:CalendarDefs defs="{ path:'calc>/'}">
 				<gnt-cal:Calendar key="{calc>CalendarId}" timeIntervals="{path:'calc>Intervals', templateShareable: true}" backgroundColor="{= ${calc>CalendarId} === 'nwt' ? '#666' : '#ccc' }">
 					<gnt-cal:TimeInterval startTime="{calc>StartDateTime}" endTime="{calc>EndDateTime}"/>
 				</gnt-cal:Calendar>
 			</gnt-cal:CalendarDefs>
-		</gnt2:calendarDef>
-
-	</gnt2:GanttChartWithTable>
+		</gnt2:calendarDef> -->
+    </gnt2:GanttChartWithTable>
 </core:FragmentDefinition>
