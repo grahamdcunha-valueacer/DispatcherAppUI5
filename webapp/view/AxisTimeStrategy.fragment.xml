@@ -9,8 +9,8 @@
 	<axistime:ProportionZoomStrategy>
 		<axistime:totalHorizon>
 			<config:TimeHorizon 
-				startTime="{horizon>/horizonStart}" 
-				endTime="{horizon>/horizonEnd}"/>
+				startTime="{horizon>/total_horizonStart}" 
+				endTime="{horizon>/total_horizonEnd}"/>
 		</axistime:totalHorizon>
 		
 		<axistime:visibleHorizon>

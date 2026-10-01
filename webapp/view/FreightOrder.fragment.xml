@@ -16,7 +16,7 @@
         shapeSelectionSettings="{color:'sapNegativeElementColor', strokeDasharray:'1,0'}"
         shapeDrop=".onShapeDrop"
         shapeDoubleClick=".onShapeDoubleClick"
-        class="foGanttCard sapUiResponsiveContentPadding"
+        class="sapUiResponsiveContentPadding"
     >
         <gnt2:table>
             <Table
@@ -24,7 +24,8 @@
                 selectionBehavior="RowSelector"
                 enableColumnReordering="true"
                 fixedColumnCount="1"
-				width="auto"
+                class="TableRowText"
+                width="auto"
                 rows="{
 					path: 'data>/Requirements',					
 					parameters: {
@@ -33,12 +34,16 @@
 				}"
             >
                 <extension>
-                    <m:OverflowToolbar class="foToolbar sapUiResponsiveContentPadding sapUiSmallMarginTop">
+                    <m:OverflowToolbar
+                        class="foToolbar sapUiResponsiveContentPadding sapUiSmallMarginTop"
+                    >
                         <m:Title
                             text="Freight Order"
                             level="H2"
                         />
-
+                        <!-- ================================================= -->
+                        <!-- TOOLBAR -->
+                        <!-- ================================================= -->
                         <m:ToolbarSpacer />
 
                         <m:Button
@@ -65,17 +70,21 @@
                 </extension>
                 <!-- Responsive row mode -->
                 <rowMode>
-                    <rm:Auto minRowCount="5" />
+                    <rm:Auto
+                        minRowCount="8"
+                        maxRowCount="30"                        
+                    />
                 </rowMode>
                 <!-- Gantt row configuration -->
                 <rowSettingsTemplate>
-                    <gnt2:GanttRowSettings rowId="{data>id}">
-                    <!-- Freight Order shape -->
+                    <gnt2:GanttRowSettings
+                        rowId="{data>id}"
+                        shapes2="{ path: 'data>RestBreakShapes',templateShareable: true
+                    }"
+                    >
+                        <!-- Freight Order shape -->
                         <gnt2:shapes1>
-                            <core:Fragment
-                                fragmentName="dispatcherns.dispatcherproj.view.Requirement"
-                                type="XML"
-                            />
+                            <core:Fragment fragmentName="dispatcherns.dispatcherproj.view.Requirement" type="XML"/>
                         </gnt2:shapes1>
                         <!-- Rest/Break shape -->
                         <!--    This renders one rest-break shape only when the fields
@@ -95,7 +104,7 @@
                                 src="sap-icon://accept"
                                 time="{
 									    path: 'data>Departure_Time',
-										formatter: '.formatter.dateToObjectByZone'}"                                
+										formatter: '.formatter.dateToObjectByZone'}"
                                 width="20"
                                 height="{= ${data>restType} === 'REST' ? 14 : 8 }"
                                 xBias="4"
@@ -104,10 +113,7 @@
                             />
                         </gnt2:shapes3>
                         <gnt2:calendars>
-                            <gnt2:BaseCalendar
-                                shapeId="{data>id}"
-                                calendarName="{data>id}"
-                                fill="#ffffff"
+                            <gnt2:BaseCalendar  shapeId="{data>id}"  calendarName="{data>id}"         fill="#ffffff"
                             />
                             <!-- <gnt2:BaseCalendar  shapeId="data>id" calendarName="Weekend" fill="#b9d3e4"/> -->
                         </gnt2:calendars>

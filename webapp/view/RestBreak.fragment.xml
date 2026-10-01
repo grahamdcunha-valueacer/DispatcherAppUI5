@@ -9,14 +9,107 @@
         shapeId="{data>shapeId}"
         time="{path:'data>StartTime', formatter:'.formatter.dateToObjectByZone'}"
         endTime="{path:'data>EndTime', formatter:'.formatter.dateToObjectByZone'}"
-        height="{= ${data>Type} === 'REST' ? 14 : 8}"
-        rx="3"
-        ry="3"
-        fill="{= ${data>Type} === 'REST'?'#6D28D9':'#F59E0B'}"
+         height="{= ${data>Type} === 'REST'? 14 : 12 }"
+        rx="4"
+        ry="4"
+        fill="{= ${data>Type} === 'REST' ? '#bac8e4' : ${data>Type} === 'BREAK' ? '#E9730C' : '#64748B'}"
+        stroke="{= ${data>Type} === 'REST'? '#4C1D95' : ${data>Type} === 'REST'? '#ffffff': '#475569'}"        
+        strokeWidth="2"
         title="{data>Title}"
-        showTitle="true"
+        showTitle="false"        
+        class="restBreakShapeTitle"
+        titleColor="#BLACK"
         selectable="false"
         draggable="false"
-        resizable="false"
+        resizable="false"    
+       
     />
+<!-- 
+    <gnt2:BaseRectangle
+        shapeId="{data>shapeId}"
+        time="{
+            path: 'data>StartTime',
+            formatter: '.formatter.dateToObjectByZone'
+            }"
+                    endTime="{
+            path: 'data>EndTime',
+            formatter: '.formatter.dateToObjectByZone'
+            }"
+                    visible="{=
+            !!${data>StartTime}
+            &amp;&amp;
+            !!${data>EndTime}
+            }"
+                    height="{=
+            ${data>Type} === 'REST'
+            ? 14
+            : 10
+            }"
+                    yBias="{=
+            ${data>Type} === 'REST'
+            ? 29
+            : 31
+            }"
+        rx="3"
+        ry="3"
+        fill="{data>FillColor}"
+        title="{data>Title}"
+        tooltip="{data>Tooltip}"
+        showTitle="true"
+        titleColor="#FFFFFF"
+        countInBirdEye="true"
+        selectable="true"
+        draggable="false"
+        resizable="false"
+    /> -->
+
+    <!-- <gnt2:BaseRectangle
+                                shapeId="{data>shapeId}"
+                                time="{
+                                    path: 'data>StartTime',
+                                    formatter: '.formatter.dateToObjectByZone'
+                                }"
+                                endTime="{
+                                    path: 'data>EndTime',
+                                    formatter: '.formatter.dateToObjectByZone'
+                                }"
+                                visible="{=
+                                    !!${data>StartTime}
+                                    &amp;&amp;
+                                    !!${data>EndTime}
+                                }"
+                                height="{=
+                                    ${data>Type} === 'REST'
+                                        ? 14
+                                        : 10
+                                }"
+                                yBias="{=
+                                    ${data>Type} === 'REST'
+                                        ? 30
+                                        : 32
+                                }"
+                                rx="3"
+                                ry="3"
+                                fill="{=
+                                    ${data>Type} === 'REST'
+                                        ? '#6D28D9'
+                                        : ${data>Type} === 'BREAK'
+                                            ? '#E9730C'
+                                            : '#64748B'
+                                }"
+                                stroke="{=
+                                    ${data>Type} === 'REST'
+                                        ? '#4C1D95'
+                                        : ${data>Type} === 'BREAK'
+                                            ? '#9A3412'
+                                            : '#475569'
+                                }"
+                                strokeWidth="1"
+                                title="{data>Title}"
+                                showTitle="true"
+                                titleColor="#FFFFFF"
+                                countInBirdEye="true"
+                                selectable="true"
+                                draggable="false"
+                                resizable="false"/> -->
 </core:FragmentDefinition>

@@ -147,8 +147,9 @@ sap.ui.define([
                 const _drivers = _drv.status === "fulfilled" ? _drv.value : [];
 
                 var aShapes = [];
-                var aRestBreakShapes = [];
+                //var aRestBreakShapes = [];
 
+                
 
                 var aResources = Array.isArray(_resources) ? _resources : (_resources?.value || []);
 
@@ -177,29 +178,29 @@ sap.ui.define([
                                 Title: oFO.id,
                                 StartTime: oFO.Departure_Time,
                                 EndTime: oFO.Arrival_Time,
-                                restType: oTruck.restType,
-                                rest_startTime: oTruck.rest_startTime,
-                                rest_endTime: oTruck.rest_endTime,
-                                Title: oTruck.restType
+                                // restType: oFO.restType,
+                                // rest_startTime: oFO.rest_startTime,
+                                // rest_endTime: oFO.rest_endTime,
+                                // Title: oFO.restType
                             };
                         });
 
                 });
 
-                aRequirements.forEach(function (oRequirement) {
-                    (oRequirement.restBreaks || []).forEach(function (oBreak) {
-                        aRestBreakShapes.push({
-                            RequirementId: oRequirement.id,
-                            VehicleId: oRequirement.Veh_id,
-                            DriverId: oRequirement.driver_id,
-                            restType: oBreak.restType,
-                            rest_startTime: oBreak.rest_startTime,
-                            rest_endTime: oBreak.rest_endTime,
-                            Title: oBreak.restType
-                        });
-                    });
+                // aRequirements.forEach(function (oRequirement) {
+                //     (oRequirement.restBreaks || []).forEach(function (oBreak) {
+                //         aRestBreakShapes.push({
+                //             RequirementId: oRequirement.id,
+                //             VehicleId: oRequirement.Veh_id,
+                //             DriverId: oRequirement.driver_id,
+                //             restType: oBreak.restType,
+                //             rest_startTime: oBreak.rest_startTime,
+                //             rest_endTime: oBreak.rest_endTime,
+                //             Title: oBreak.restType
+                //         });
+                //     });
 
-                });
+                // });
 
                 this.setModel(
                     new JSONModel({
@@ -207,59 +208,59 @@ sap.ui.define([
                         Drivers: _drivers,
                         Resources: aResources,
                         AvailabilityShapes: aShapes,
-                        RestBreakShapes: aRestBreakShapes
+                        //RestBreakShapes: aRestBreakShapes
                     }),
                     "data"
                 );
 
             } catch (error) {
-                sap.m.MessageBox.show(
+                console.error(
                     "Unable to load data: " +
                     (error.message || error.toString())
                 );
             }
         },
 
-        GetResbreaks: function () {
-            aRequirements.forEach(function (oFO) {
-                var aRestBreaks = Array.isArray(oFO.restBreaks)
-                    ? oFO.restBreaks
-                    : [];
+        // GetResbreaks: function () {
+        //     aRequirements.forEach(function (oFO) {
+        //         var aRestBreaks = Array.isArray(oFO.restBreaks)
+        //             ? oFO.restBreaks
+        //             : [];
 
-                oFO.RestBreakShapes = aRestBreaks
-                    .filter(function (oBreak) {
-                        return oBreak &&
-                            oBreak.rest_startTime &&
-                            oBreak.rest_endTime;
-                    })
-                    .map(function (oBreak, iIndex) {
-                        var sType = String(
-                            oBreak.restType || "BREAK"
-                        ).toUpperCase();
+        //         oFO.RestBreakShapes = aRestBreaks
+        //             .filter(function (oBreak) {
+        //                 return oBreak &&
+        //                     oBreak.rest_startTime &&
+        //                     oBreak.rest_endTime;
+        //             })
+        //             .map(function (oBreak, iIndex) {
+        //                 var sType = String(
+        //                     oBreak.restType || "BREAK"
+        //                 ).toUpperCase();
 
-                        return {
-                            shapeId: [
-                                oFO.id || oFO.transportationOrderUUID || "FO",
-                                sType,
-                                iIndex
-                            ].join("-"),
+        //                 return {
+        //                     shapeId: [
+        //                         oFO.id || oFO.transportationOrderUUID || "FO",
+        //                         sType,
+        //                         iIndex
+        //                     ].join("-"),
 
-                            RequirementId: oFO.id,
-                            Type: sType,
-                            Title: sType,
-                            StartTime: oBreak.rest_startTime,
-                            EndTime: oBreak.rest_endTime,
+        //                     RequirementId: oFO.id,
+        //                     Type: sType,
+        //                     Title: sType,
+        //                     StartTime: oBreak.rest_startTime,
+        //                     EndTime: oBreak.rest_endTime,
 
-                            Tooltip:
-                                sType +
-                                ": " +
-                                oBreak.rest_startTime +
-                                " - " +
-                                oBreak.rest_endTime
-                        };
-                    });
-            });
-        }
+        //                     Tooltip:
+        //                         sType +
+        //                         ": " +
+        //                         oBreak.rest_startTime +
+        //                         " - " +
+        //                         oBreak.rest_endTime
+        //                 };
+        //             });
+        //     });
+        // }
 
 
 
