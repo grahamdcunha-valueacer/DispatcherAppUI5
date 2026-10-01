@@ -304,17 +304,16 @@
 }
 
 .dashboardHeader {
-    background: linear-gradient(90deg,
-            #0A6ED1,
-            #2563EB);
-    color: white;
-    padding: 0.75rem;
+  
+    color: #000000;
+    padding: 0.55rem;
 }
 
 .customGanttToolbar {
-    background-color: #b2c3d4;
+    
+    background-color: #d2dfec;
     border-bottom: 1px solid #d9d9d9;
-    width: 70%;
+    width: 100%;
 }
 
 .sapGanttChart {
@@ -332,24 +331,24 @@
 
 .truckGanttCard {
     border-radius: 12px;
-    background: #baccdf;
+    background: #d2dfec;
     box-shadow: 0 0.125rem 0.75rem rgba(0, 0, 0, 0.08);
 }
 
 .foGanttCard {
     border-radius: 12px;
-    background: #baccdf;
+    background: #d2dfec;
     box-shadow: 0 0.125rem 0.75rem rgba(0, 0, 0, 0.08);
 }
 
 .resourceGanttCard {
     border-radius: 12px;
-    background: #baccdf;
+    background: #d2dfec;
     box-shadow: 0 0.125rem 0.75rem rgba(0, 0, 0, 0.08);
 }
 
 .truckTable .sapUiTableColHdrCnt {
-    background: #baccdf;
+    background: #d2dfec;
     border-bottom: 1px solid #e5e7eb;
 }
 
@@ -359,17 +358,17 @@
 
 /* Modern Toolbar */
 .truckToolbar {
-    background: #a0b7ce;
+    background: #d2dfec;
     border-bottom: 1px solid #e5e7eb;
 }
 
 .foToolbar {
-    background: #a0b7ce;
+    background: #d2dfec;
     border-bottom: 1px solid #e5e7eb;
 }
 
 .driverToolbar {
-    background: #a0b7ce;
+    background: #d2dfec;
     border-bottom: 1px solid #e5e7eb;
 }
 
@@ -394,7 +393,7 @@ font-family: "72", Arial, sans-serif !important;
 }
 
 .TableRowText text {
-font-size: 9px !important;
+font-size: 6px ;
 font-weight: 200 !important;
 font-family: "72", Arial, sans-serif !important;
 }

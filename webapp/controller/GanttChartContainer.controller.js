@@ -30,11 +30,28 @@ sap.ui.define([
 			// 	1
 			// );
 
+			// const response = await fetch(
+			// 		"http://localhost:3000/api/GetData",{
+			// 			method: "GET",
+			// 			headers: {
+			// 				"Content-Type": "application/json"
+			// 			},
+			// 			  const _requirements = _fo.status === "fulfilled" ? _fo.value : [];
+			//   			  const _resources = _veh.status === "fulfilled" ? _veh.value : [];
+			//     		 const _drivers = _drv.status === "fulfilled" ? _drv.value : [];
+
+			// 		});
+
+
 			var oFromDate = new Date(oToday);
-			oFromDate.setDate(oFromDate.getDate() - 1);
+			oFromDate.setDate(oFromDate.getDate() - 2);
 
 			var oToDate = new Date(oToday);
-			oToDate.setDate(oToDate.getDate() + 3);
+			oToDate.setDate(oToDate.getDate() + 2);
+
+			var oFromDate = this._getDateInZone(-2);
+			var oToDate = this._getDateInZone(3);
+
 
 			var sSettings =
 				localStorage.getItem("DispatcherZoneSettings");
@@ -56,19 +73,27 @@ sap.ui.define([
 			/********************************************************************************************* */
 			var oGantt1 = this.getView().byId("FreightOrder");
 
-			var oFullScreenButton1 = new sap.m.Button({
+			var oMaximizeButton1 = new sap.m.Button({
+				icon: "sap-icon://resize",
+				type: "Transparent",
+				press: function () {
+					this.onMaximize(oGantt1, false, oMaximizeButton1);
+					//this.onToggleFullScreen(oGantt1, false, oFullScreenButton1);
+				}.bind(this)
+			});
+			var oFullScreenFOButton = new sap.m.Button({
 				icon: "sap-icon://full-screen",
 				type: "Transparent",
 				press: function () {
-					this.onToggleFullScreen(oGantt1, false, oFullScreenButton1);
+					this.onToggleFullScreen(oGantt1, false, oFullScreenFOButton);
 				}.bind(this)
 			});
 			oGantt1.addEventDelegate({
 				onAfterRendering: function () {
-
 					var oGanttOverflowToolbar = oGantt1.getChartOverflowToolbar();
 					if (oGanttOverflowToolbar) {
-						oGanttOverflowToolbar.addContent(oFullScreenButton1);
+						oGanttOverflowToolbar.addContent(oMaximizeButton1);
+						oGanttOverflowToolbar.addContent(oFullScreenFOButton);
 					}
 					//oGantt1.setShowBirdEye(true);
 				}
@@ -76,50 +101,201 @@ sap.ui.define([
 
 			/********************************************************************************************* */
 			var oGantt2 = this.getView().byId("Truck");
-			var oFullScreenButton2 = new sap.m.Button({
+
+			var oMaximizeButton2 = new sap.m.Button({
+				icon: "sap-icon://resize",
+				type: "Transparent",
+				press: function () {
+					this.onMaximize(oGantt1, false, oMaximizeButton2);
+				}.bind(this)
+			});
+			var oFullScreenTruck = new sap.m.Button({
 				icon: "sap-icon://full-screen",
 				type: "Transparent",
 				press: function () {
-					this.onToggleFullScreen(oGantt2, true, oFullScreenButton2);
+					this.onToggleFullScreen(oGantt2, true, oFullScreenTruck);
 				}.bind(this)
 			});
 			oGantt2.addEventDelegate({
 				onAfterRendering: function () {
 					var oGanttOverflowToolbar = oGantt2.getChartOverflowToolbar();
 					if (oGanttOverflowToolbar) {
-						oGanttOverflowToolbar.addContent(oFullScreenButton2);
+						oGanttOverflowToolbar.addContent(oMaximizeButton2);
+						oGanttOverflowToolbar.addContent(oFullScreenTruck);
 					}
 				}
 			});
 
 			/********************************************************************************************* */
 			var oGantt3 = this.getView().byId("Driver");
-			var oFullScreenButton3 = new sap.m.Button({
+			var oMaximizeButton3 = new sap.m.Button({
+				icon: "sap-icon://resize",
+				type: "Transparent",
+				press: function () {
+					this.onMaximize(oGantt1, false, oMaximizeButton3);
+				}.bind(this)
+			});
+			var oFullScreenDriver = new sap.m.Button({
 				icon: "sap-icon://full-screen",
 				type: "Transparent",
 				press: function () {
-					this.onToggleFullScreen(oGantt3, true, oFullScreenButton3);
+					this.onToggleFullScreen(oGantt3, true, oFullScreenDriver);
 				}.bind(this)
 			});
 			oGantt3.addEventDelegate({
 				onAfterRendering: function () {
 					var oGanttOverflowToolbar = oGantt3.getChartOverflowToolbar();
 					if (oGanttOverflowToolbar) {
-						oGanttOverflowToolbar.addContent(oFullScreenButton3);
+						oGanttOverflowToolbar.addContent(oMaximizeButton3);
+						oGanttOverflowToolbar.addContent(oFullScreenDriver);
 					}
 				}
 			});
 		},
+
 		/********************************************************************************************** */
 		onToggleFullScreen: function (oGantt, bShowToolbar, oButton) {
+
+			var oContainer = this.byId("container");
+
 			oGantt.toggleFullScreen(bShowToolbar, oButton);
+
+			var oFreightOrder = this.byId("FreightOrder");
+			var oDriver = this.byId("Driver");
+			var oTruck = this.byId("Truck");
+
 			if (oGantt.fullScreenMode()) {
+
 				oButton.setIcon("sap-icon://exit-full-screen");
-				//this.getView().byId("layoutSelect").setVisible(false);
+
+				// Freight Order expanded
+				if (oGantt === oFreightOrder) {
+
+					oDriver.setVisible(true);
+					oTruck.setVisible(false);
+
+				}
+				// Driver expanded
+				else if (oGantt === oDriver) {
+
+
+					oDriver.setVisible(true);
+					oTruck.setVisible(false);
+
+				}
+				// Vehicle expanded
+				else if (oGantt === oTruck) {
+
+					oFreightOrder.setVisible(true);
+					oDriver.setVisible(false);
+
+				}
+
 			} else {
+
 				oButton.setIcon("sap-icon://full-screen");
-				//this.getView().byId("layoutSelect").setVisible(true);
+
+				oFreightOrder.setVisible(true);
+				oDriver.setVisible(true);
+				oTruck.setVisible(true);
 			}
+
+
+		},
+		onMaximize: function (oGantt, bShowToolbar, oButton) {
+
+			var oContainer = this.byId("container");
+
+			var oFreightOrder = this.byId("FreightOrder");
+			var oDriver = this.byId("Driver");
+			var oTruck = this.byId("Truck");
+
+			this._bMaximized = !this._bMaximized;
+
+			if (this._bMaximized) {
+
+				//oButton.setIcon("sap-icon://exit-full-screen");
+
+				if (oGantt === oFreightOrder) {
+
+					oContainer.removeAllGanttCharts();
+
+					oContainer.addGanttChart(oFreightOrder);
+					oContainer.addGanttChart(oDriver);
+
+				} else if (oGantt === oDriver) {
+
+					oContainer.removeAllGanttCharts();
+
+					oContainer.addGanttChart(oFreightOrder);
+					oContainer.addGanttChart(oDriver);
+
+				} else if (oGantt === oTruck) {
+
+					oContainer.removeAllGanttCharts();
+
+					oContainer.addGanttChart(oFreightOrder);
+					oContainer.addGanttChart(oTruck);
+				}
+
+			} else {
+
+				//oButton.setIcon("sap-icon://resize");
+
+				oContainer.removeAllGanttCharts();
+
+				oContainer.addGanttChart(oFreightOrder);
+				oContainer.addGanttChart(oDriver);
+				oContainer.addGanttChart(oTruck);
+			}
+		},
+
+		/********************************************************************************************** */
+
+		onToggleFullScreen1: function (oGantt, bShowToolbar, oButton) {
+			oGantt.toggleFullScreen(bShowToolbar, oButton);
+
+			var oDriver = this.byId("Driver");
+			var oTruck = this.byId("Truck");
+
+			if (oGantt.getId().includes("FreightOrder")) {
+
+				if (oGantt.fullScreenMode()) {
+
+					oButton.setIcon("sap-icon://exit-full-screen");
+					oDriver.setVisible(true);
+					oTruck.setVisible(false);
+
+				} else {
+
+					oButton.setIcon("sap-icon://full-screen");
+					oDriver.setVisible(true);
+					oTruck.setVisible(true);
+				}
+			}
+
+			// if (oGantt.fullScreenMode()) {
+			// 	oButton.setIcon("sap-icon://exit-full-screen");
+			// 	this.showUtilization()
+			// 	//this.getView().byId("layoutSelect").setVisible(false);
+			// } else {
+			// 	oButton.setIcon("sap-icon://full-screen");
+			// 	//this.getView().byId("layoutSelect").setVisible(true);
+			// }
+
+			// var oDriverGantt = this.byId("Driver");
+			// var oTable = oDriverGantt.getTable();
+
+			// for (let i = 0; i < oTable.getBinding("rows").getLength(); i++) {
+			// 	oDriverGantt.expand("driver", i);
+			// }
+
+			// var oTruckGantt = this.byId("Truck");
+			// var oTable = oTruckGantt.getTable();
+
+			// for (let i = 0; i < oTable.getBinding("rows").getLength(); i++) {
+			// 	oTruckGantt.expand("truck_to_ulc", i);
+			// }
 		},
 
 		onLoadData: async function () {
@@ -460,7 +636,7 @@ sap.ui.define([
 					resourceType: "Driver",
 					ShiftPeriodStart: oShiftPeriodStart ? oShiftPeriodStart.toISOString() : null,
 					ShiftPeriodEnd: oShiftPeriodEnd ? oShiftPeriodEnd.toISOString() : null,
-					ShiftPeriodTitle:oShiftPeriodStart && oShiftPeriodEnd ? "Total Shift Period": "",
+					ShiftPeriodTitle: oShiftPeriodStart && oShiftPeriodEnd ? "Total Shift Period" : "",
 					shifts: aShifts
 				});
 			}.bind(this));
@@ -674,22 +850,52 @@ sap.ui.define([
 
 			this.byId("dpFromDate").setDateValue(oFromDate);
 			this.byId("dpToDate").setDateValue(oToDate);
+
+			// Total Horizon = Visible -1 day / +2 days
+			var oVisibleStart = new Date(oFromDate);
+			oVisibleStart.setDate(oVisibleStart.getDate() - 1);
+
+			var oVisbleEnd = new Date(oToDate);
+			oVisbleEnd.setDate(oVisbleEnd.getDate() + 2);
+
+
 			var sStart =
-				oFromDate.getFullYear() +
-				String(oFromDate.getMonth() + 1).padStart(2, "0") +
-				String(oFromDate.getDate()).padStart(2, "0") +
+				oVisibleStart.getFullYear() +
+				String(oVisibleStart.getMonth() + 1).padStart(2, "0") +
+				String(oVisibleStart.getDate()).padStart(2, "0") +
 				"000000";
 
 			var sEnd =
-				oToDate.getFullYear() +
-				String(oToDate.getMonth() + 1).padStart(2, "0") +
-				String(oToDate.getDate()).padStart(2, "0") +
+				oVisbleEnd.getFullYear() +
+				String(oVisbleEnd.getMonth() + 1).padStart(2, "0") +
+				String(oVisbleEnd.getDate()).padStart(2, "0") +
+				"235959";
+
+			// Total Horizon = Visible -1 day / +2 days
+			var oTotalStart = new Date(oFromDate);
+			oTotalStart.setDate(oTotalStart.getDate());
+
+			var oTotalEnd = new Date(oToDate);
+			oTotalEnd.setDate(oTotalEnd.getDate());
+
+			var sTStart =
+				oTotalStart.getFullYear() +
+				String(oTotalStart.getMonth() + 1).padStart(2, "0") +
+				String(oTotalStart.getDate()).padStart(2, "0") +
+				"000000";
+
+			var sTEnd =
+				oTotalEnd.getFullYear() +
+				String(oTotalEnd.getMonth() + 1).padStart(2, "0") +
+				String(oTotalEnd.getDate()).padStart(2, "0") +
 				"235959";
 
 
 			var oViewModel = new sap.ui.model.json.JSONModel({
 				horizonStart: sStart,
-				horizonEnd: sEnd
+				horizonEnd: sEnd,
+				total_horizonStart: sTStart,
+				total_horizonEnd: sTEnd
 			});
 
 			this.getView().setModel(oViewModel, "horizon");
@@ -708,10 +914,9 @@ sap.ui.define([
 
 		},
 
-		onShapeDropV1: async function (oEvent) {
+		onShapeDrop_1: async function (oEvent) {
 
 			try {
-
 
 				this.byId("btnSave").setEnabled(true);
 				var oSourceGantt = oEvent.getSource();
@@ -888,6 +1093,7 @@ sap.ui.define([
 		onShapeDrop: async function (oEvent) {
 			var oSourceGantt = oEvent.getSource();
 			var oDataModel = oSourceGantt.getModel("data");
+			var oSimulationFlag = false;
 
 			try {
 				var mDraggedShapeDates =
@@ -909,6 +1115,56 @@ sap.ui.define([
 				if (!oTargetRow) {
 					throw new Error("Please drop the Freight Order on a resource row");
 				}
+
+
+				const response = await fetch(
+					"http://localhost:3000/api/validate",
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify(
+							{
+								AssignmentsToValidate: [
+									{
+										"foId": "6100001556",
+										"driverId": "0001000139",
+										"vehId": "VA_01_1010_INT"
+									},
+									{
+										"foId": "6100001556",
+										"driverId": "0001000139",
+										"vehId": ""
+									},
+									{
+										"foId": "6100001556",
+										"driverId": "",
+										"vehId": "VA_01_1010_INT"
+									},
+									{
+										"foId": "6100001556",
+										"driverId": "",
+										"vehId": ""
+									},
+									{
+										"foId": "",
+										"driverId": "",
+										"vehId": ""
+									},
+									{
+										"foId": "6100001559",
+										"driverId": "0001000611",
+										"vehId": "VA_04_1010_INT"
+									}
+								]
+							})
+					}
+				);
+
+				const result = await response.json();
+				console.log(result);
+
 
 				/*
 				* Parse the dragged shape UID.
@@ -943,6 +1199,9 @@ sap.ui.define([
 
 				var oTargetContext =
 					oTargetRow.getBindingContext("data");
+				//oTargetContext.sPath 
+				//'/Resources/1'
+				//'/Truck/1'
 
 				if (!oTargetContext) {
 					throw new Error(
@@ -954,32 +1213,71 @@ sap.ui.define([
 					oTargetContext.getObject();
 
 				var sResourceType =
-					oTargetResource.resourceType ||
-					oTargetResource.ResourceType ||
-					"";
+					(oTargetResource.resourceType ||
+						oTargetResource.ResourceType ||
+						"") === "09"
+						? "Vehicle"
+						: (oTargetResource.resourceType ||
+							oTargetResource.ResourceType ||
+							"");
 
 				if (
-					sResourceType !== "09" &&
-					sResourceType !== "Vehicle"
+					sResourceType !== "Driver" &&
+					sResourceType !== "Vehicle" &&
+					sResourceType !== ""
 				) {
 					sap.m.MessageToast.show(
-						"Drop the Freight Order on a truck or vehicle row"
+						"Drop the Freight Order on a Driver, Vehicle, or Simulation row"
 					);
 					return;
 				}
+
+				var oTargetRow = oEvent.getParameter("targetRow");
+				var oTargetObject = oTargetRow.getBindingContext("data").getObject();
+				var sTargetObjectType = oTargetObject.resourceType;
+
+
+				console.log(oFreightOrder.driverID);
+
+				// var oDataModel = this.getOwnerComponent().getModel("data");
+				// var oDataModel = oSourceGantt.getModel("data");
 
 				/*
 				* Handle the different resource-ID names returned by
 				* your resource service.
 				*/
-				var sTargetVehicleId =
-					oTargetResource.resourceId ||
-					oTargetResource.ResourceID ||
-					oTargetResource.id ||
-					oTargetResource.Veh_id ||
-					oTargetResource.veh_regno;
 
-				if (!sTargetVehicleId) {
+				// var sTargetVehicleId =
+				// 	oTargetResource.resourceId ||
+				// 	oTargetResource.driverID ||
+				// 	oTargetResource.driverUUID ||
+				// 	oTargetResource.ResourceID ||
+				// 	oTargetResource.id ||
+				// 	oTargetResource.Veh_id ||
+				// 	oTargetResource.veh_regno;
+
+
+				let sTargetId = "";
+
+				if (sResourceType === "Driver") {
+					sTargetId =
+						oTargetResource.driverID ||
+						oTargetResource.driverUUID ||
+						oTargetResource.resourceId;
+				} else if (sResourceType === "Vehicle") {
+					sTargetId =
+						oTargetResource.Veh_id ||
+						oTargetResource.veh_regno ||
+						oTargetResource.resourceId;
+				}
+				else {
+					sTargetId =
+						oTargetResource.id ||
+						oTargetResource.ID;
+				}
+
+
+				if (!sTargetId) {
 					throw new Error(
 						"The target vehicle does not contain a resource ID"
 					);
@@ -1032,127 +1330,277 @@ sap.ui.define([
 					.replace(/-/g, "")
 					.toUpperCase();
 
-				var oResponse =
-					await FreightOrderService.GetFOSimilution({
-						IvTorKey: sTorKey,
-						IvNewDepartureDatetime:
-							formatter.formatDate(oNewStart)
-					});
+				const sPath = oTargetContext?.sPath || "";
 
-				var oSimulation =
-					oResponse?.value?.[0]?.simulationResults?.[0];
+				oSimulationFlag = ![
+					"/Drivers/",
+					"/Truck/",
+					"/Resources/"
+				].some(sType => sPath.includes(sType));
 
-				if (!oSimulation) {
-					throw new Error(
-						"No simulation result was returned"
-					);
-				}
+				if (oSimulationFlag) {
 
-				if (oSimulation.updateRc === "F") {
-					throw new Error(
-						oSimulation.updateMessage ||
-						"Freight Order simulation failed"
-					);
+					var oResponse =
+						await FreightOrderService.GetFOSimilution({
+							IvTorKey: sTorKey,
+							IvNewDepartureDatetime:
+								formatter.formatDate(oNewStart)
+						});
+
+					var oSimulation =
+						oResponse?.value?.[0]?.simulationResults?.[0];
+
+					if (!oSimulation) {
+						throw new Error(
+							"No simulation result was returned"
+						);
+					}
+
+					if (oSimulation.updateRc === "F") {
+						throw new Error(
+							oSimulation.updateMessage ||
+							"Freight Order simulation failed"
+						);
+					}
 				}
 
 				/*
 				* Prefer the dates returned by simulation.
 				* Use calculated dates as fallback.
 				*/
-				var sNewDeparture =
-					oSimulation.newDepartureStart ||
-					oNewStart.toISOString();
 
-				var sNewArrival =
-					oSimulation.newDepartureEnd ||
-					oNewEnd.toISOString();
+				var sNewDeparture = oSimulation?.newDepartureStart ?? oNewStart.toISOString();
 
-				var aRestBreakShapes = (
-					Array.isArray(oSimulation.restBreaks)
-						? oSimulation.restBreaks
-						: []
-				).map(function (oBreak, iIndex) {
+				var sNewArrival = oSimulation?.newDepartureEnd ?? oNewEnd.toISOString();
+
+				const aRestBreaks = oSimulation?.restBreaks ?? [];
+
+				var aRestBreakShapes = aRestBreaks.map(function (oBreak, iIndex) {
 					var sType = String(
 						oBreak.restType || "BREAK"
 					).toUpperCase();
 
 					return {
-						shapeId: [
-							oFreightOrder.id,
-							sType,
-							iIndex
-						].join("-"),
-
+						shapeId: [oFreightOrder.id, sType, iIndex].join("-"),
 						RequirementId: oFreightOrder.id,
 						Type: sType,
 						Title: sType,
 						StartTime: oBreak.rest_startTime,
 						EndTime: oBreak.rest_endTime,
-						FillColor:
-							this._getRestBreakColor(sType),
-
-						Tooltip:
-							this._createRestBreakTooltip(
-								sType,
-								oBreak.rest_startTime,
-								oBreak.rest_endTime
-							)
+						FillColor: this._getRestBreakColor(sType),
+						Tooltip: this._createRestBreakTooltip(
+							sType,
+							oBreak.rest_startTime,
+							oBreak.rest_endTime
+						)
 					};
 				}.bind(this));
+
+				// var aRestBreakShapes = (
+				// 	Array.isArray(oSimulation.restBreaks)
+				// 		? oSimulation.restBreaks
+				// 		: []
+				// ).map(function (oBreak, iIndex) {
+				// 	var sType = String(
+				// 		oBreak.restType || "BREAK"
+				// 	).toUpperCase();
+
+				// 	return {
+				// 		shapeId: [
+				// 			oFreightOrder.id,
+				// 			sType,
+				// 			iIndex
+				// 		].join("-"),
+
+				// 		RequirementId: oFreightOrder.id,
+				// 		Type: sType,
+				// 		Title: sType,
+				// 		StartTime: oBreak.rest_startTime,
+				// 		EndTime: oBreak.rest_endTime,
+				// 		FillColor:
+				// 			this._getRestBreakColor(sType),
+
+				// 		Tooltip:
+				// 			this._createRestBreakTooltip(
+				// 				sType,
+				// 				oBreak.rest_startTime,
+				// 				oBreak.rest_endTime
+				// 			)
+				// 	};
+				// }.bind(this));
+
+
 
 				/*
 				* Update the current FO row using the JSONModel API.
 				*/
-				oDataModel.setProperty(
-					sFoPath + "/Departure_Time",
-					sNewDeparture
-				);
 
-				oDataModel.setProperty(
-					sFoPath + "/Arrival_Time",
-					sNewArrival
-				);
 
-				oDataModel.setProperty(
-					sFoPath + "/Veh_id",
-					sTargetVehicleId
-				);
 
-				oDataModel.setProperty(
-					sFoPath + "/veh_regno",
-					oTargetResource.veh_regno ||
-					sTargetVehicleId
-				);
+				var that = this;
 
-				oDataModel.setProperty(
-					sFoPath + "/RestBreakShapes",
-					aRestBreakShapes
-				);
 
-				/*
+				if (oSimulationFlag) {
+
+					var oNewDateTime = new Date(formatter.dateToNewObject(sNewDeparture).getTime());
+					var oNewEndDateTime = new Date(formatter.dateToNewObject(sNewArrival).getTime());
+
+					oDataModel.setProperty(
+						sFoPath + "/Departure_Time",
+						oNewDateTime.toISOString().replace(".000", "")
+					);
+
+					oDataModel.setProperty(
+						sFoPath + "/Arrival_Time",
+						oNewEndDateTime.toISOString().replace(".000", "")
+					);
+
+					oDataModel.setProperty(
+						sFoPath + "/RestBreakShapes",
+						aRestBreakShapes
+					);
+
+					that.applySimulationResultToFreightOrder(oNewDateTime.toISOString().replace(".000", ""), oNewEndDateTime.toISOString().replace(".000", ""), oTargetContext, sFoPath, oDataModel);
+					//that.applySimulationResultToFreightOrder(sNewDeparture instanceof Date? sNewDeparture.toISOString().replace(".000", ""): String(sNewDeparture), sNewArrival instanceof Date? sNewArrival.toISOString().replace(".000", ""): String(sNewArrival), oTargetContext, sPath, oDataModel);
+					sap.m.MessageToast.show(`Freight Order updated successfully. Start: ${sNewDeparture}, End: ${sNewArrival}`);
+
+				}
+				else {
+
+					console.log("Resource Type", sResourceType);
+					console.log("Target Resource", oTargetResource);
+					console.log("Target ID", sTargetId);
+
+					// oDataModel.setProperty(
+					// 	sFoPath + "/Departure_Time",
+					// 	sNewDeparture
+					// );
+
+					// oDataModel.setProperty(
+					// 	sFoPath + "/Arrival_Time",
+					// 	sNewArrival
+					// );
+
+					if (sResourceType === "Driver") {
+
+						oDataModel.setProperty(
+							sFoPath + "/driverID",
+							sTargetId
+						);
+						var drv_id = sTargetId;
+
+					} else if (sResourceType === "Vehicle") {
+
+						oDataModel.setProperty(
+							sFoPath + "/Veh_id",
+							sTargetId
+						);
+
+						oDataModel.setProperty(
+							sFoPath + "/veh_regno",
+							oTargetResource.veh_regno || sTargetId
+						);
+						var veh_id = sTargetId;
+					}
+
+					// oDataModel.setProperty(
+					// 	sFoPath + "/driverID",
+					// 	sTargetVehicleId
+					// );
+
+					// oDataModel.setProperty(
+					// 	sFoPath + "/Veh_id",
+					// 	sTargetVehicleId
+					// );
+
+					// oDataModel.setProperty(
+					// 	sFoPath + "/veh_regno",
+					// 	oTargetResource.veh_regno ||
+					// 	sTargetVehicleId
+					// );
+
+					/*
 				* Keep changes for the Save API.
 				*/
+					// this._addChangedFreightOrder({
+					// 	IvTorKey: sTorKey,
+					// 	IvTorID: oFreightOrder.id,
+					// 	IvNewDepartureDatetime:
+					// 		this._toBackendDateTime(sNewDeparture),
+					// 	IvDriverId:
+					// 		oFreightOrder.driver_id || "",
+					// 	IvVehicleResId:
+					// 		sTargetId
+					// });
+
+					//that.handleMoveFreightOrderToTruck(sNewDeparture, sNewArrival, oTargetContext, sPath, oDataModel);
+
+					// this._addFOShapeToResource(
+					// 	sResourceType,
+					// 	sTargetVehicleId,
+					// 	oFreightOrder,
+					// 	sNewDeparture,
+					// 	sNewArrival
+					// );
+
+					var aFOShapes = oTargetResource.FOShapes || [];
+
+					aFOShapes.push({
+						shapeId: oFreightOrder.id,
+						Title: oFreightOrder.id,
+						StartTime: oOldStart,
+						EndTime: oOldEnd
+
+					});
+
+					oTargetResource.FOShapes = aFOShapes;
+
+					var aDrivers = oDataModel.getProperty("/Drivers") || [];
+
+					var oDriver = aDrivers.find(function (oDrv) {
+						return oDrv.driverID === sTargetId;
+					});
+
+					if (oDriver) {
+
+						oDriver.FOShapes = oDriver.FOShapes || [];
+						oDriver.FOShapes.push({
+							shapeId: oFreightOrder.id,
+							Title: oFreightOrder.id,
+							StartTime: oOldStart,
+							EndTime: oOldEnd,
+							ActionIcon: true
+						});
+					}
+
+
+					sap.m.MessageToast.show(
+						"FO " +
+						oFreightOrder.id +
+						" assigned to " +
+						sTargetId
+					);
+
+				}
+
 				this._addChangedFreightOrder({
 					IvTorKey: sTorKey,
 					IvTorID: oFreightOrder.id,
 					IvNewDepartureDatetime:
 						this._toBackendDateTime(sNewDeparture),
 					IvDriverId:
-						oFreightOrder.driver_id || "",
+						drv_id,
+					//oFreightOrder.driver_id || "",
 					IvVehicleResId:
-						sTargetVehicleId
+						veh_id
 				});
 
-				oDataModel.refresh(true);
-
 				this.byId("btnSave").setEnabled(true);
+				this.byId("UseAI").setEnabled(false);
+				oDataModel.refresh(true);
+				this.getView().getModel("data").refresh(true);
 
-				sap.m.MessageToast.show(
-					"FO " +
-					oFreightOrder.id +
-					" assigned to " +
-					sTargetVehicleId
-				);
+
 
 			} catch (oError) {
 				console.error("FO drop failed", oError);
@@ -1186,6 +1634,25 @@ sap.ui.define([
 				this.aChangedFOs.findIndex(function (oItem) {
 					return oItem.IvTorID === oChange.IvTorID;
 				});
+
+			// if (oExisting) {
+
+			// 	if (oChange.IvVehicleResId) {
+			// 		oExisting.IvVehicleResId = oChange.IvVehicleResId;
+			// 	}
+
+			// 	if (oChange.IvDriverId) {
+			// 		oExisting.IvDriverId = oChange.IvDriverId;
+			// 	}
+
+			// 	if (oChange.IvNewDepartureDatetime) {
+			// 		oExisting.IvNewDepartureDatetime =
+			// 			oChange.IvNewDepartureDatetime;
+			// 	}
+
+			// } else {
+			// 	this.aChangedFOs.push(oChange);
+			// }
 
 			if (iExistingIndex >= 0) {
 				this.aChangedFOs[iExistingIndex] = oChange;
@@ -1353,23 +1820,23 @@ sap.ui.define([
 					oModel.setProperty(sPath + "/Arrival_Time", oEndTime);
 				});
 
-			if (!this.aChangedFOs) {
-				this.aChangedFOs = [];
-			}
+			// if (!this.aChangedFOs) {
+			// 	this.aChangedFOs = [];
+			// }
 
-			var sFormatted = oTime
-				.replace(/[-:]/g, "")
-				.replace("T", "")
-				.replace("Z", "");
+			// var sFormatted = oTime
+			// 	.replace(/[-:]/g, "")
+			// 	.replace("T", "")
+			// 	.replace("Z", "");
 
-			this.aChangedFOs.push({
+			// this.aChangedFOs.push({
 
-				IvTorKey: oData.transportationOrderUUID.replace(/-/g, "").toUpperCase(),
-				IvTorID: oData.id,
-				IvNewDepartureDatetime: sFormatted,
-				IvDriverId: "",
-				IvVehicleResId: ""
-			});
+			// 	IvTorKey: oData.transportationOrderUUID.replace(/-/g, "").toUpperCase(),
+			// 	IvTorID: oData.id,
+			// 	IvNewDepartureDatetime: sFormatted,
+			// 	IvDriverId: "",
+			// 	IvVehicleResId: ""
+			// });
 
 		},
 
@@ -1622,11 +2089,32 @@ sap.ui.define([
 		showUtilization: function () {
 			var oGanttChartContainer = this.byId("container");
 			var aGantts = oGanttChartContainer.getGanttCharts();
-			aGantts.forEach(function (oGantt) {
-				if (oGantt.getId().endsWith("Truck")) {
-					oGantt.expand("truck_to_ulc", oGantt.getTable().getSelectedIndices()[0]);
+
+			var oDriver = this.byId("Driver");
+			var oTruck = this.byId("Truck");
+
+			if (oGantt.getId().includes("FreightOrder")) {
+
+				if (oGantt.fullScreenMode()) {
+
+					oDriver.setVisible(true);
+					oTruck.setVisible(false);
+
+				} else {
+
+					oDriver.setVisible(true);
+					oTruck.setVisible(true);
 				}
-			});
+			}
+
+			// aGantts.forEach(function (oGantt) {
+			// 	if (oGantt.getId().endsWith("Truck")) {
+			// 		oGantt.expand("truck_to_ulc", oGantt.getTable().getSelectedIndices()[0]);
+			// 	}
+			// 	else if (oGantt.getId().endsWith("driver")) {
+			// 		oGantt.expand("driver_to_ulc", oGantt.getTable().getSelectedIndices()[0]);
+			// 	}
+			// });
 		},
 
 		hideUtilization: function () {
@@ -1676,6 +2164,9 @@ sap.ui.define([
 				this.getView().getModel("data").refresh(true);
 
 				sap.m.MessageToast.show("Freight Orders saved successfully and refreshed successfully");
+
+				this.byId("btnSave").setEnabled(false);
+				this.byId("UseAI").setEnabled(true);
 
 			} catch (error) {
 
@@ -1995,14 +2486,65 @@ sap.ui.define([
 
 		_applyZoneSettings: function (oSettings) {
 
-			// Example:
-			//console.log("Zone Settings:", oSettings);
+			if (!oSettings) {
+				return;
+			}
+
+			console.log("Zone Settings:", oSettings);
+
+			// Save timezone separately for _getDateInZone()
+			localStorage.setItem(
+				"DispatcherZone",
+				oSettings.zone || "IST"
+			);
+
+			var oFreightOrder = this.byId("FreightOrder");
+			var oDriver = this.byId("Driver");
+			var oTruck = this.byId("Truck");
+
+			// Show / Hide Freight Orders
+			if (oFreightOrder) {
+				oFreightOrder.setVisible(
+					oSettings.showFreightOrders !== false
+				);
+			}
+
+			// Show / Hide Drivers
+			if (oDriver) {
+				oDriver.setVisible(
+					oSettings.showDrivers !== false
+				);
+			}
 
 			// Show / Hide Truck Availability
-			// Show / Hide Freight Orders
-			// Show / Hide Driver View
-			// Update timezone formatting
-			// Toggle Bird Eye View
+			if (oTruck) {
+				oTruck.setVisible(
+					oSettings.showAvailability !== false
+				);
+			}
+
+			// Bird Eye View
+			[oFreightOrder, oDriver, oTruck]
+				.filter(Boolean)
+				.forEach(function (oChart) {
+					if (oChart.setShowBirdEye) {
+						oChart.setShowBirdEye(
+							!!oSettings.birdEye
+						);
+					}
+				});
+
+			// Recalculate horizon in selected timezone
+			var oFromDate = this._getDateInZone(-2);
+			var oToDate = this._getDateInZone(3);
+
+			this._updateHorizon(
+				oFromDate,
+				oToDate
+			);
+
+			// Optional reload data so dates appear in selected zone
+			this.onLoadData();
 		},
 
 		_initP13n: function () {
@@ -2238,6 +2780,196 @@ sap.ui.define([
 				"End: " + fnFormat(oEndDate)
 			].join("\n");
 		},
+
+		_addFOShapeToResource: function (
+			sResourceType,
+			sTargetId,
+			oFreightOrder,
+			sNewDeparture,
+			sNewArrival
+		) {
+
+			var oModel = this.getView().getModel("data");
+
+			var sCollection =
+				sResourceType === "Driver"
+					? "/Drivers"
+					: "/Resources";
+
+			var aItems = oModel.getProperty(sCollection) || [];
+
+			var oTarget = aItems.find(function (oItem) {
+				return (
+					oItem.driverID === sTargetId ||
+					oItem.resourceId === sTargetId
+				);
+			});
+
+			if (!oTarget) {
+				return;
+			}
+
+			oTarget.FOShapes = oTarget.FOShapes || [];
+
+			oTarget.FOShapes.push({
+				shapeId: oFreightOrder.id,
+				Title: oFreightOrder.id,
+				StartTime: sNewDeparture,
+				EndTime: sNewArrival
+			});
+
+			oModel.refresh(true);
+		},
+
+		_getDateInZone: function (iOffsetDays) {
+
+			const mZones = {
+				CET: "Europe/Berlin",
+				IST: "Asia/Kolkata",
+				UTC: "UTC",
+				EST: "America/New_York"
+				
+			};
+
+			const sZone = localStorage.getItem("DispatcherZone")
+				|| "IST";
+
+			const oDate = new Date(
+				new Date().toLocaleString("en-US", {
+					timeZone: mZones[sZone]
+				})
+			);
+
+			oDate.setDate(oDate.getDate() + iOffsetDays);
+
+			return oDate;
+		},
+		onUnassignFO: function (oFreightOrder, sResourceType, sTargetId) {
+
+			sap.m.MessageBox.confirm(
+				"Do you want to unassign Freight Order " +
+				oFreightOrder.id + "?",
+				{
+					title: "Confirm Unassignment",
+
+					actions: [
+						sap.m.MessageBox.Action.OK,
+						sap.m.MessageBox.Action.CANCEL
+					],
+
+					emphasizedAction:
+						sap.m.MessageBox.Action.OK,
+
+					onClose: function (sAction) {
+
+						if (
+							sAction !==
+							sap.m.MessageBox.Action.OK
+						) {
+							return;
+						}
+
+						var oModel =
+							this.getView().getModel("data");
+
+						// Remove assignment
+						if (sResourceType === "Driver") {
+
+							oFreightOrder.driverID = "";
+
+						} else if (
+							sResourceType === "Vehicle"
+						) {
+
+							oFreightOrder.Veh_id = "";
+							oFreightOrder.veh_regno = "";
+						}
+
+						// Remove shape from target row
+						var sCollection =
+							sResourceType === "Driver"
+								? "/Drivers"
+								: "/Resources";
+
+						var aItems =
+							oModel.getProperty(
+								sCollection
+							) || [];
+
+						var oTarget =
+							aItems.find(function (oItem) {
+
+								return (
+									oItem.driverID === sTargetId ||
+									oItem.resourceId === sTargetId
+								);
+
+							});
+
+						if (oTarget) {
+
+							oTarget.FOShapes =
+								(oTarget.FOShapes || [])
+									.filter(function (oShape) {
+
+										return (
+											oShape.shapeId !==
+											oFreightOrder.id
+										);
+
+									});
+						}
+
+						this._addChangedFreightOrder({
+							IvTorKey:
+								oFreightOrder
+									.transportationOrderUUID
+									.replace(/-/g, "")
+									.toUpperCase(),
+
+							IvTorID:
+								oFreightOrder.id,
+
+							IvNewDepartureDatetime:
+								this._toBackendDateTime(
+									oFreightOrder.Departure_Time
+								),
+
+							IvDriverId:
+								sResourceType === "Driver"
+									? ""
+									: oFreightOrder.driverID,
+
+							IvVehicleResId:
+								sResourceType === "Vehicle"
+									? ""
+									: oFreightOrder.Veh_id
+						});
+
+						oModel.refresh(true);
+
+						this.byId("btnSave")
+							.setEnabled(true);
+
+						sap.m.MessageToast.show(
+							"FO " +
+							oFreightOrder.id +
+							" unassigned successfully"
+						);
+
+					}.bind(this)
+				}
+			);
+		},
+		press: function () {
+
+			this.onUnassignFO(
+				oFreightOrder,
+				"Vehicle",
+				oFreightOrder.Veh_id
+			);
+
+		}.bind(this)
 
 
 	});

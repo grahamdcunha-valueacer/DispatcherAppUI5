@@ -16,7 +16,7 @@
         shapeSelectionSettings="{color:'sapNegativeElementColor', strokeDasharray:'1,0'}"
         shapeDrop=".onShapeDrop"
         shapeDoubleClick=".onShapeDoubleClick"
-        class="foGanttCard sapUiResponsiveContentPadding"
+        class="sapUiResponsiveContentPadding"
     >
         <gnt2:table>
             <Table
@@ -26,7 +26,7 @@
                 fixedColumnCount="1"
                 class="TableRowText"
                 width="auto"
-                 rows="{
+                rows="{
 					path: 'data>/Requirements',					
 					parameters: {
 						operationMode: 'Server'

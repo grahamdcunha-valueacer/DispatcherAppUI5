@@ -23,6 +23,7 @@
         shapeResize=".onOrderRescheduled"
         shapeDoubleClick=".onShapeDoubleClick"
         class="driverGanttCard"
+        
     >
         <gnt2:table>
             <Table
@@ -66,48 +67,15 @@
                     <rm:Auto minRowCount="5" />
                 </rowMode>
                 <rowSettingsTemplate>
-                    <gnt2:GanttRowSettings
-                        rowId="{data>driverID}"
-                        shapes2="{ path: 'data>ShiftShapes',templateShareable: false}"
+                    <gnt2:GanttRowSettings rowId="{data>driverID}" shapes1="{data>ShiftShapes}"
+                        shapes2="{data>FOShapes}"
                     >
+                    <gnt2:calendars>
+							<gnt2:BaseCalendar shapeId="{data>driverID}" calendarName="{data>driverID}" fill="#ffffff"/>
+						</gnt2:calendars> 
 					<!-- Driver validity background -->
-                        <gnt2:shapes1>
-                            <gnt2:BaseRectangle
-                                shapeId="{data>driverID}"
-                                time="{
-								path:'data>ShiftPeriodStart',
-								formatter:'.formatter.dateToObject'
-								}"
-                                endTime="{
-								path:'data>oShiftPeriodEnd',
-								formatter:'.formatter.dateToObject'
-								}"
-                                fill="#BCCAaf"
-                                stroke="#5B738B"
-                                height="22"
-                                strokeWidth="1"
-                                rx="4"
-                                ry="4"
-                                countInBirdEye="true"
-                                showTitle="true"
-                                tooltip="{
-											parts: [
-												'i18n>VehicleTooltip',
-												'data>driverID',
-												'data>ShiftPeriodStart',
-												'data>oShiftPeriodEnd'
-											],
-											formatter: 'formatMessage'
-									}"
-                                expandable="true"
-                                selectable="true"
-                                draggable="true"
-                                resizable="true"
-                            />
-                        </gnt2:shapes1>
 
-						<!-- Individual daily shifts -->
-							<gnt2:shapes2>
+                        <gnt2:shapes1>
 							<gnt2:BaseRectangle
 									shapeId="{data>shapeId}"
 									time="{
@@ -118,20 +86,61 @@
 											path: 'data>EndTime',
 											formatter: '.formatter.dateToObjectByZone'
 											}"
-									title="{data>Title}"
-									showTitle="true"
-									titleColor="#1D2D3E"
-									fill="#99D101"
-									stroke="#4F6B00"
+									
+									fill="#bccaaf"
+									stroke="#cccccc"
 									strokeWidth="1"
-									height="20"
-									rx="4"
-									ry="4"
-									countInBirdEye="true"
+                                    transform=""
+									height="22"
+									rx="6"
+									ry="6"
+									countInBirdEye="false"
 									selectable="false"
 									draggable="false"
 									resizable="false"/>
-							</gnt2:shapes2>
+							</gnt2:shapes1>
+                        <gnt2:shapes2>
+                             <gnt2:BaseDiamond>
+							</gnt2:BaseDiamond>	
+                            <gnt2:BaseRectangle
+                                shapeId="{data>driverID}"
+                                time="{
+								path:'data>StartTime',
+								formatter:'.formatter.dateToObject'
+								}"
+                                endTime="{
+								path:'data>EndTime',
+								formatter:'.formatter.dateToObject'
+								}"
+                                fill="#99D101"
+                                stroke="#ffffff"
+                                height="20"
+                                strokeWidth="1"
+                                rx="4"
+                                ry="4"
+                                title="{data>Title}"
+									showTitle="true"
+									titleColor="#1D2D3E"
+                                countInBirdEye="true"
+                                
+                                tooltip="{
+											parts: [
+												'i18n>DriverTooltip',
+												'data>driverID',
+												'data>StartTime',
+												'data>EndTime'
+											],
+											formatter: 'formatMessage'
+									}"
+                                expandable="false"
+                                selectable="true"
+                                draggable="true"
+                                resizable="false"
+                            />
+                        </gnt2:shapes2>
+
+						<!-- Individual daily shifts -->
+							
                     </gnt2:GanttRowSettings>
                 </rowSettingsTemplate>
                 <columns>
@@ -145,7 +154,7 @@
                     <Column
                         sortProperty="driverID"
                         filterProperty="driverID"
-                        width="140px"
+                        width="95px"
                     >
                         <m:Text text="Driver ID" />
                         <template>
@@ -155,6 +164,7 @@
                     <Column
                         sortProperty="firstName"
                         filterProperty="firstName"
+                        width="95px"
                     >
                         <m:Text text="First Name" />
                         <template>
@@ -164,7 +174,7 @@
                     <Column
                         sortProperty="lastName"
                         filterProperty="lastName"
-                        width="140px"
+                        width="95px"
                     >
                         <m:Text text="Last Name" />
                         <template>
@@ -177,11 +187,11 @@
 
         <gnt2:shapeSchemes>
             <gnt2:ShapeScheme
-                key="truck"
+                key="driver"
                 primary="true"
             />
             <gnt2:ShapeScheme
-                key="truck_to_ulc"
+                key="driver_to_ulc"
                 rowSpan="2"
             />
         </gnt2:shapeSchemes>

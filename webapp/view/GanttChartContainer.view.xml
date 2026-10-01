@@ -9,23 +9,8 @@
           xmlns:gnt2="sap.gantt.simple">
 	<m:Page title="Dispatcher Cockpit for Driver and Vehicle assignment with Freight order"   showNavButton="true" contentOnlyBusy="true">
 	<m:customHeader >
-		<m:OverflowToolbar class="sapUiResponsiveContentPadding sapUiSmallMarginBottom">
-			<!-- <m:Title text="Dispatcher Cockpit- Driver and Truck Availability Freight Assignment" /> -->
-			<m:ToolbarSpacer/>
-			<m:Button text="Use AI Proposal" icon="sap-icon://ai" type="Emphasized" id="UseAI" press=".onUseAIProposal" class="sapUiTinyMarginEnd"/>
-			<m:Button text="AI Settings" icon="sap-icon://action-settings" type="Emphasized" press=".onAISettings" class="sapUiTinyMarginEnd"/>
-			<m:Button text="AI Analytics" icon="sap-icon://line-chart"  type="Emphasized" press=".onAIAnalytics" class="sapUiTinyMarginEnd"/>
-			<m:Button text="Driver Regulations" icon="sap-icon://world" type="Emphasized" tooltip="Maintain EU Driver Regulations" press=".onEURegulations" class="sapUiTinyMarginEnd"/>
-			<!-- <m:Button text="Zone Settings" icon="sap-icon://action-settings" type="Emphasized" tooltip="Custom Personalization" press=".onOpenZoneSettings"/> -->
-			<m:Button text="Custom Personalization" type="Emphasized" icon="sap-icon://customize" press=".onOpenP13n" class="sapUiTinyMarginEnd"/>
-			</m:OverflowToolbar>
-	</m:customHeader>
-	   
-		<gnt2:GanttChartContainer id="container" enableTimeScrollSync="true"  enableAutoFocusOnZoom="true">		
-
-			<gnt2:toolbar>				
-				<gnt2:ContainerToolbar id="toolbar" design="Auto" showBirdEyeButton="true" showLegendButton="true" ganttSidePanel=".onGanttSidePanel" showSearchButton="true">		
-				<m:OverflowToolbar class=" customGanttToolbar sapUiResponsiveContentPadding">
+		<m:OverflowToolbar class="customGanttToolbar sapUiResponsiveContentPadding sapUiSmallMarginBottom">
+			
 				 <m:Label text="From Date" class="sapUiTinyMarginEnd dashboardHeader"/>
 				 <m:DateTimePicker
                        value=""
@@ -62,9 +47,21 @@
                         text="Reset"
                         type="Transparent"
                     />	
-				</m:OverflowToolbar>		
-				 		
-
+			
+			
+			<m:Button text="Use AI Proposal" icon="sap-icon://ai" type="Emphasized" id="UseAI" press=".onUseAIProposal" class="sapUiTinyMarginEnd"/>
+			<m:Button text="AI Settings" icon="sap-icon://action-settings" type="Emphasized" press=".onAISettings" class="sapUiTinyMarginEnd"/>
+			<m:Button text="AI Analytics" icon="sap-icon://line-chart"  type="Emphasized" press=".onAIAnalytics" class="sapUiTinyMarginEnd"/>
+			<m:Button text="Driver Regulations" icon="sap-icon://world" type="Emphasized" tooltip="Maintain EU Driver Regulations" press=".onEURegulations" class="sapUiTinyMarginEnd"/>
+			<m:Button text="Zone Settings" icon="sap-icon://action-settings" type="Emphasized" tooltip="Custom Personalization" press=".onOpenZoneSettings"/> 
+			<m:Button text="Custom Personalization" type="Emphasized" icon="sap-icon://customize" press=".onOpenP13n" class="sapUiTinyMarginEnd"/>
+			</m:OverflowToolbar>
+	</m:customHeader>
+	   
+		<gnt2:GanttChartContainer id="container" enableTimeScrollSync="true"  enableAutoFocusOnZoom="true">
+			<gnt2:toolbar>				
+				<gnt2:ContainerToolbar id="toolbar" design="Auto" showBirdEyeButton="true" showLegendButton="true" ganttSidePanel=".onGanttSidePanel" showSearchButton="true">		
+						
 					<!-- <m:Select id="layoutSelect" forceSelection="false" selectedKey="ReqAndRes" change=".onLayoutChange">
 						<m:items>						
 							<core:Item key="ReqAndResAndDrv" text="Requirement And Resource and Driver"/>
@@ -110,7 +107,7 @@
 					Desc:  Changed Code to replace FreightOrderAndFreightUnit with FreightOrder View -  					
 					-->
 			<!-- <core:Fragment fragmentName="dispatcherns.dispatcherproj.view.FreightOrderAndFreightUnit" type="XML"/> -->			
-			<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.FreightOrder" type="XML"/>
+			<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.FreightOrder"  type="XML"/>
 			<!--End of Change: 16 September 2026 !-->
 			<core:Fragment fragmentName="dispatcherns.dispatcherproj.view.DriverView" type="XML"/>   
 			 <core:Fragment fragmentName="dispatcherns.dispatcherproj.view.Truck" type="XML"/> 
