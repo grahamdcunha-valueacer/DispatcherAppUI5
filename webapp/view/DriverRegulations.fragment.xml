@@ -95,46 +95,19 @@
                     <f:SimpleForm
                         editable="{eu>/editMode}"
                         layout="ResponsiveGridLayout">
- 
+                        <Label text="Warehouse"/>
+                        <Select
+                            selectedKey="{eu>/DC_ID}"
+                            enabled="{eu>/editMode}"
+                            width="100%">
+                            <core:Item key="1" text="1010"/>
+                            <core:Item key="2" text="1011"/>
+                        </Select>
                         <Label text="Regulation ID"/>
                         <Input
                             value="{eu>/REGULATION_ID}"
                             editable="false"/>
  
-                        <Label text="Country Code"/>
-                        <Select
-                            selectedKey="{eu>/COUNTRY_CODE}"
-                            enabled="{eu>/editMode}"
-                            width="100%">
-                            <core:Item key="AT" text="AT - Austria"/>
-                            <core:Item key="BE" text="BE - Belgium"/>
-                            <core:Item key="BG" text="BG - Bulgaria"/>
-                            <core:Item key="HR" text="HR - Croatia"/>
-                            <core:Item key="CY" text="CY - Cyprus"/>
-                            <core:Item key="CZ" text="CZ - Czech Republic"/>
-                            <core:Item key="DK" text="DK - Denmark"/>
-                            <core:Item key="EE" text="EE - Estonia"/>
-                            <core:Item key="EU" text="EU - European Union"/>
-                            <core:Item key="FI" text="FI - Finland"/>
-                            <core:Item key="FR" text="FR - France"/>
-                            <core:Item key="DE" text="DE - Germany"/>
-                            <core:Item key="GR" text="GR - Greece"/>
-                            <core:Item key="HU" text="HU - Hungary"/>
-                            <core:Item key="IE" text="IE - Ireland"/>
-                            <core:Item key="IT" text="IT - Italy"/>
-                            <core:Item key="LV" text="LV - Latvia"/>
-                            <core:Item key="LT" text="LT - Lithuania"/>
-                            <core:Item key="LU" text="LU - Luxembourg"/>
-                            <core:Item key="MT" text="MT - Malta"/>
-                            <core:Item key="NL" text="NL - Netherlands"/>
-                            <core:Item key="PL" text="PL - Poland"/>
-                            <core:Item key="PT" text="PT - Portugal"/>
-                            <core:Item key="RO" text="RO - Romania"/>
-                            <core:Item key="SK" text="SK - Slovakia"/>
-                            <core:Item key="SI" text="SI - Slovenia"/>
-                            <core:Item key="ES" text="ES - Spain"/>
-                            <core:Item key="SE" text="SE - Sweden"/>
-                        </Select>
  
                         <Label text="Regulation Version"/>
                         <Input

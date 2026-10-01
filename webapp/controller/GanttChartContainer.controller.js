@@ -273,8 +273,7 @@ sap.ui.define([
 					var oTargetObject = oTargetRow.getBindingContext("data").getObject();
 					var sTargetObjectType = oTargetObject.resourceType;
 
-					var oDataModel = this.getOwnerComponent().getModel("data");
-					var oDataModel = oSourceGantt.getModel("data");
+					var oDataModel = oSourceGantt.getModel("data") || this.getOwnerComponent().getModel("data");
 					var that = this;
 
 					Object.keys(oDraggedShapeDates).forEach(function (sShapeUid) {
